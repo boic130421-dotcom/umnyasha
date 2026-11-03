@@ -1,195 +1,353 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#6957e8"><title>УМНЯША</title><script src="https://telegram.org/js/telegram-web-app.js"></script>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6957e8">
+<title>УМНЯША</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f5f3ff;color:#242044;font:16px/1.45 system-ui,-apple-system,sans-serif}#app{max-width:620px;margin:auto;padding:18px 16px 35px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.logo{font-size:26px;font-weight:1000;color:#6957e8}.logo span{color:#ff78a8}.stars{background:white;padding:9px 14px;border-radius:30px;font-weight:800}.screen{display:none}.screen.active{display:block}.hero{background:linear-gradient(135deg,#7565f1,#a078ed);color:white;padding:25px;border-radius:25px;margin-bottom:20px}.hero h1{font-size:29px;line-height:1.15;margin:8px 0}.hero p{margin:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{background:white;border:2px solid transparent;border-radius:18px;padding:16px 12px;text-align:left;min-height:105px;color:#242044;box-shadow:0 5px 16px #30206b10}.tile.selected{border-color:#6957e8;background:#f0edff}.tile .emoji{display:block;font-size:29px;margin-bottom:7px}.tile b{display:block}.tile small,.muted{color:#77738f}.primary{width:100%;background:#6957e8;color:white;border:0;padding:15px;border-radius:15px;font-weight:850;margin-top:16px}.primary:disabled{opacity:.4}.secondary{background:#eeebff;color:#6957e8;border:0;padding:13px;border-radius:14px;font-weight:750}.back{background:none;border:0;color:#77738f;padding:8px 0;font-weight:700}h2{font-size:21px;margin:20px 0 12px}.progress{height:9px;background:#e7e3f8;border-radius:20px;overflow:hidden;margin:15px 0 20px}.progress span{display:block;height:100%;background:linear-gradient(90deg,#ff78a8,#6957e8);width:0}.card,.result{background:white;border-radius:23px;padding:21px;box-shadow:0 7px 24px #30206b10}.qmeta{display:flex;justify-content:space-between;color:#77738f;font-size:13px;font-weight:700}.question{font-size:23px;font-weight:850;line-height:1.25;margin:22px 0}.answers{display:grid;gap:10px}.answer{background:#f5f3ff;border:2px solid transparent;color:#242044;padding:14px;border-radius:14px;text-align:left;font-weight:700}.answer:disabled{opacity:1}.answer.correct{background:#e6f8ef;border-color:#27ae78}.answer.wrong{background:#fff0f3;border-color:#e66b88}.feedback{min-height:25px;margin-top:12px;font-weight:750}.good{color:#229768}.bad{color:#d84e70}.result{text-align:center}.big{font-size:65px}.score{font-size:34px;color:#6957e8;font-weight:950}.note{text-align:center;color:#77738f;font-size:12px;margin-top:20px}
-</style></head><body><div id="app">
-<header><div class="logo">УМНЯ<span>ША</span> 🧠</div><div class="stars">⭐ <span id="total">0</span></div></header>
-<section class="screen active" id="home"><div class="hero"><div style="font-size:40px">🦊✨</div><h1>Учись играя — становись умнее!</h1><p>Решай задачки, открывай новое и собирай звёзды.</p></div><h2>Сколько тебе лет?</h2><div class="grid" id="ages">
-<button class="tile" data-age="4–6"><span class="emoji">🧸</span><b>4–6 лет</b><small>Первые задачки</small></button><button class="tile" data-age="7–9"><span class="emoji">🚀</span><b>7–9 лет</b><small>Юные исследователи</small></button><button class="tile" data-age="10–12"><span class="emoji">🔎</span><b>10–12 лет</b><small>Мастера логики</small></button><button class="tile" data-age="13–16"><span class="emoji">⚡</span><b>13–16 лет</b><small>Сложные вызовы</small></button></div><button class="primary" id="go" disabled>Продолжить</button><div class="note">Бесплатная игра · 5 вопросов в раунде</div></section>
-<section class="screen" id="cats"><button class="back" id="back">← Возраст</button><h2>Выбери тему</h2><p class="muted" id="ageLabel"></p><div class="grid" id="category"><button class="tile" data-cat="Логика"><span class="emoji">🧩</span><b>Логика</b><small>Думай и находи ответ</small></button><button class="tile" data-cat="Математика"><span class="emoji">🔢</span><b>Математика</b><small>Считай с интересом</small></button><button class="tile" data-cat="Память"><span class="emoji">🧠</span><b>Память</b><small>Запоминай детали</small></button><button class="tile" data-cat="Окружающий мир"><span class="emoji">🌍</span><b>Мир вокруг</b><small>Узнавай новое</small></button></div><button class="primary" id="start" disabled>Начать игру</button></section>
-<section class="screen" id="play"><button class="back" id="backCats">← К темам</button><div class="qmeta"><span id="catLabel"></span><span id="count"></span></div><div class="progress"><span id="bar"></span></div><div class="card"><div class="question" id="question"></div><div class="answers" id="answers"></div><div class="feedback" id="feedback"></div><button class="primary" id="next" hidden>Дальше →</button></div></section>
-<section class="screen" id="result"><div class="result"><div class="big" id="medal">🏆</div><h1 id="resultTitle">Отличная работа!</h1><p class="muted" id="resultText"></p><div class="score" id="score"></div><p id="earned"></p><button class="primary" id="again">Сыграть ещё</button><button class="secondary" id="home" style="width:100%;margin-top:10px">На главную</button></div></section>
-</div>
-<script>
-const tg=window.Telegram?.WebApp;try{tg?.ready();tg?.expand()}catch(e){}
-const bank={
-"4–6":{"Логика":[["Что лишнее: кошка, собака, яблоко?","Яблоко",["Кошка","Собака","Яблоко"]],["Что идёт после понедельника?","Вторник",["Воскресенье","Вторник","Пятница"]],["У кого есть крылья?","Птица",["Рыба","Птица","Кот"]],["Что круглое?","Мяч",["Книга","Мяч","Кубик"]],["Что надевают на ноги?","Носки",["Шапку","Носки","Шарф"]]],"Математика":[["1 + 1 = ?","2",["1","2","3"]],["Сколько пальцев на одной руке?","5",["4","5","6"]],["2 конфеты и ещё 1. Сколько стало?","3",["2","3","4"]],["Что больше: 3 или 1?","3",["1","2","3"]],["Сколько лап у двух кошек?","8",["4","6","8"]]],"Память":[["Запомни: солнце, мяч, кот. Что было вторым?","Мяч",["Кот","Солнце","Мяч"]],["Что надевают на голову?","Шапку",["Ботинки","Шапку","Перчатки"]],["Красный, синий, жёлтый. Какой цвет последним?","Жёлтый",["Синий","Красный","Жёлтый"]],["Чем узнают время?","Часами",["Часами","Ложкой","Мячом"]],["Что было первым: заяц, ёж, лиса?","Заяц",["Лиса","Ёж","Заяц"]]],"Окружающий мир":[["Где живут рыбы?","В воде",["В воде","На дереве","В песке"]],["После зимы наступает...","Весна",["Лето","Осень","Весна"]],["Что даёт корова?","Молоко",["Мёд","Молоко","Сок"]],["Какого цвета обычно трава?","Зелёная",["Синяя","Зелёная","Красная"]],["Кто собирает мёд?","Пчела",["Пчела","Кошка","Лошадь"]]]},
-"7–9":{"Логика":[["2, 4, 6, 8, ...","10",["9","10","12"]],["Что лишнее: яблоко, груша, морковь, слива?","Морковь",["Яблоко","Груша","Морковь","Слива"]],["У Маши 3 брата. Сколько всего детей, если она их единственная сестра?","4",["3","4","6"]],["▲ ■ ▲ ■ ▲ ...","■",["▲","■","●"]],["У квадрата срезали один угол. Сколько углов стало?","5",["3","4","5"]]],"Математика":[["7 × 3 = ?","21",["18","21","24"]],["Было 15 наклеек, 6 подарили. Сколько осталось?","9",["8","9","10"]],["Какое число делится на 2 без остатка?","18",["15","17","18"]],["Сколько минут в половине часа?","30",["15","20","30"]],["24 + 16 = ?","40",["38","40","42"]]],"Память":[["4, 9, 2, 7. Какое число было третьим?","2",["4","9","2"]],["Мяч, книга, ключ. Что было посередине?","Книга",["Ключ","Книга","Мяч"]],["Река, гора, лес. Какое слово было первым?","Река",["Лес","Гора","Река"]],["Сколько предметов: 🍎 ⭐ 🚗 🐟?","4",["3","4","5"]],["Какой порядок цветов светофора?","Красный, жёлтый, зелёный",["Зелёный, жёлтый, красный","Красный, жёлтый, зелёный","Жёлтый, красный, зелёный"]]],"Окружающий мир":[["Какая планета — Красная планета?","Марс",["Венера","Марс","Юпитер"]],["Сколько ног у паука?","8",["6","8","10"]],["Как называется замёрзшая вода?","Лёд",["Пар","Лёд","Соль"]],["Какое животное — млекопитающее?","Дельфин",["Акула","Дельфин","Осьминог"]],["Что растения поглощают из воздуха?","Углекислый газ",["Кислород","Углекислый газ","Азот"]]]},
+*{box-sizing:border-box}
+body{margin:0;background:#f5f3ff;color:#242044;font:16px/1.45 system-ui,sans-serif}
+#app{max-width:620px;margin:auto;padding:18px 16px 35px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.logo{font-size:26px;font-weight:1000;color:#6957e8}
+.logo span{color:#ff78a8}
+.stars{background:white;padding:9px 14px;border-radius:30px;font-weight:800}
+.screen{display:none}
+.screen.active{display:block}
+.hero{background:linear-gradient(135deg,#7565f1,#a078ed);color:white;padding:25px;border-radius:25px;margin-bottom:20px}
+.hero h1{font-size:29px;line-height:1.15;margin:8px 0}
+.hero p{margin:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:white;border:2px solid transparent;border-radius:18px;padding:16px 12px;text-align:left;min-height:105px;color:#242044;box-shadow:0 5px 16px #30206b10;cursor:pointer}
+.tile.selected{border-color:#6957e8;background:#f0edff}
+.tile .emoji{display:block;font-size:29px;margin-bottom:7px}
+.tile b{display:block}
+.tile small,.muted{color:#77738f}
+.primary{width:100%;background:#6957e8;color:white;border:0;padding:15px;border-radius:15px;font-weight:850;margin-top:16px;cursor:pointer}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:#eeebff;color:#6957e8;border:0;padding:13px;border-radius:14px;font-weight:750;cursor:pointer}
+.back{background:none;border:0;color:#77738f;padding:8px 0;font-weight:700;cursor:pointer}
+h2{font-size:21px;margin:20px 0 12px}
+.progress{height:9px;background:#e7e3f8;border-radius:20px;overflow:hidden;margin:15px 0 20px}
+.progress span{display:block;height:100%;background:linear-gradient(90deg,#ff78a8,#6957e8);width:0}
+.card,.result{background:white;border-radius:23px;padding:21px;box-shadow:0 7px 24px #30206b10}
+.qmeta{display:flex;justify-content:space-between;color:#77738f;font-size:13px;font-weight:700}
+.question{font-size:23px;font-weight:850;line-height:1.25;margin:22px 0}
+.answers{display:grid;gap:10px}
+.answer{background:#f5f3ff;border:2px solid transparent;color:#242044;padding:14px;border-radius:14px;text-align:left;font-weight:700;cursor:pointer}
+.answer:disabled{opacity:1}
+.answer.correct{background:#e6f8ef;border-color:#27ae78}
+.answer.wrong{background:#fff0f3;border-color:#e66b88}
+.feedback{min-height:25px;margin-top:12px;font-weight:750}
+.good{color:#229768}
+.bad{color:#d84e70}
+.result{text-align:center}
+.big{font-size:65px}
+.score{font-size:34px;color:#6957e8;font-weight:950}
+.note{text-align:center;color:#77738f;font-size:12px;margin-top:20px}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+<div class="logo">УМНЯ<span>ША</span> 🧠</div>
+<div class="stars">⭐ <span id="total">0</span></div>
+</header>
 
-"10–12":{"Логика":[["3, 6, 12, 24, ...","48",["36","42","48"]],["Все вороны — птицы. Можно ли точно сказать, что все птицы — вороны?","Нет",["Да","Нет","Иногда"]],["У трёх сестёр один общий брат. Сколько детей?","4",["6","7","4"]],["Если сегодня среда, какой день через 10 дней?","Суббота",["Пятница","Суббота","Воскресенье"]],["Что лишнее: 9, 16, 25, 30, 36?","30",["16","30","36"]]],
-"Математика":[["15% от 200 = ?","30",["20","30","35"]],["3 × (8 + 4) − 10 = ?","26",["24","26","28"]],["Периметр квадрата со стороной 7 см?","28 см",["14 см","21 см","28 см"]],["x + 17 = 42. Найди x.","25",["24","25","26"]],["3/4 от 80 = ?","60",["40","50","60"]]],
-"Память":[["12, 5, 19, 8, 3. Какое число четвёртое?","8",["19","8","3"]],["Дуб, клён, берёза, сосна. Какое дерево третье?","Берёза",["Клён","Берёза","Сосна"]],["Север, восток, юг, запад. Что после востока?","Юг",["Север","Юг","Запад"]],["Сколько букв в слове «электричество»?","13",["12","13","14"]],["Что лишнее: апрель, июнь, вторник, август?","Вторник",["Апрель","Июнь","Вторник"]]],
-"Окружающий мир":[["Какой газ преобладает в атмосфере Земли?","Азот",["Кислород","Азот","Углекислый газ"]],["Превращение воды в пар — это...","Испарение",["Замерзание","Испарение","Конденсация"]],["Какой океан самый большой?","Тихий",["Атлантический","Индийский","Тихий"]],["Какой орган перекачивает кровь?","Сердце",["Лёгкие","Сердце","Печень"]],["Сколько планет в Солнечной системе?","8",["7","8","9"]]]},
-"13–16":{"Логика":[["1, 1, 2, 3, 5, 8, ...","13",["11","13","16"]],["Все зипы — зопы, ни один зоп не мип. Может ли зип быть мипом?","Нет",["Да","Нет","Иногда"]],["Если позавчера был понедельник, какой день послезавтра?","Пятница",["Четверг","Пятница","Суббота"]],["Найди лишнее: куб, шар, пирамида, квадрат.","Квадрат",["Куб","Шар","Квадрат"]],["У числа 144 квадратный корень равен...","12",["10","12","14"]]],
-"Математика":[["2x + 7 = 25. Найди x.","9",["8","9","10"]],["13² = ?","169",["156","169","179"]],["Вероятность орла при броске честной монеты?","1/2",["1/4","1/2","1/3"]],["Сократи дробь 42/56","3/4",["2/3","3/4","4/5"]],["20% от 350 = ?","70",["60","70","80"]]],
-"Память":[["17, 4, 29, 11, 6, 23. Какое число пятое?","6",["11","6","23"]],["Маяк, компас, карта, телескоп. Что второе?","Компас",["Маяк","Компас","Карта"]],["Запомни код 583174. Какая третья цифра?","3",["8","3","1"]],["Энергия, импульс, скорость, масса. Какое слово последнее?","Масса",["Скорость","Импульс","Масса"]],["Сколько цифр в числе 9072051?","7",["6","7","8"]]],
-"Окружающий мир":[["Какой элемент обозначается Fe?","Железо",["Фтор","Железо","Фосфор"]],["Как называется центр атома?","Ядро",["Электрон","Ядро","Орбита"]],["В каком слое атмосферы находится озоновый слой?","Стратосфера",["Тропосфера","Стратосфера","Мезосфера"]],["Наука о наследственности — это...","Генетика",["Экология","Генетика","Геология"]],["Какой материк пересекают все меридианы?","Антарктида",["Африка","Евразия","Антарктида"]]]}
+<section class="screen active" id="homeScreen">
+<div class="hero">
+<div style="font-size:40px">🦊✨</div>
+<h1>Учись играя — становись умнее!</h1>
+<p>Решай задачки, открывай новое и собирай звёзды.</p>
+</div>
+<h2>Сколько тебе лет?</h2>
+<div class="grid" id="ages">
+<button class="tile" data-age="4–6"><span class="emoji">🧸</span><b>4–6 лет</b><small>Первые задачки</small></button>
+<button class="tile" data-age="7–9"><span class="emoji">🚀</span><b>7–9 лет</b><small>Юные исследователи</small></button>
+<button class="tile" data-age="10–12"><span class="emoji">🔎</span><b>10–12 лет</b><small>Мастера логики</small></button>
+<button class="tile" data-age="13–16"><span class="emoji">⚡</span><b>13–16 лет</b><small>Сложные вызовы</small></button>
+</div>
+<button class="primary" id="go" disabled>Продолжить</button>
+<div class="note">Бесплатная игра · 5 вопросов в раунде</div>
+</section>
+
+<section class="screen" id="cats">
+<button class="back" id="back">← Возраст</button>
+<h2>Выбери тему</h2>
+<p class="muted" id="ageLabel"></p>
+<div class="grid" id="category">
+<button class="tile" data-cat="Логика"><span class="emoji">🧩</span><b>Логика</b><small>Думай и находи ответ</small></button>
+<button class="tile" data-cat="Математика"><span class="emoji">🔢</span><b>Математика</b><small>Считай с интересом</small></button>
+<button class="tile" data-cat="Память"><span class="emoji">🧠</span><b>Память</b><small>Запоминай детали</small></button>
+<button class="tile" data-cat="Окружающий мир"><span class="emoji">🌍</span><b>Мир вокруг</b><small>Узнавай новое</small></button>
+</div>
+<button class="primary" id="start" disabled>Начать игру</button>
+</section>
+
+<section class="screen" id="play">
+<button class="back" id="backCats">← К темам</button>
+<div class="qmeta"><span id="catLabel"></span><span id="count"></span></div>
+<div class="progress"><span id="bar"></span></div>
+<div class="card">
+<div class="question" id="question"></div>
+<div class="answers" id="answers"></div>
+<div class="feedback" id="feedback"></div>
+<button class="primary" id="next" hidden>Дальше →</button>
+</div>
+</section>
+
+<section class="screen" id="result">
+<div class="result">
+<div class="big" id="medal">🏆</div>
+<h1 id="resultTitle">Отличная работа!</h1>
+<p class="muted" id="resultText"></p>
+<div class="score" id="score"></div>
+<p id="earned"></p>
+<button class="primary" id="again">Сыграть ещё</button>
+<button class="secondary" id="homeBtn" style="width:100%;margin-top:10px">На главную</button>
+</div>
+</section>
+</div>
+
+<script>
+const bank={
+"4–6":{
+"Логика":[
+["Что лишнее: кошка, собака, яблоко?","Яблоко",["Кошка","Собака","Яблоко"]],
+["Что идёт после понедельника?","Вторник",["Воскресенье","Вторник","Пятница"]],
+["У кого есть крылья?","Птица",["Рыба","Птица","Кот"]],
+["Что круглое?","Мяч",["Книга","Мяч","Кубик"]],
+["Что надевают на ноги?","Носки",["Шапку","Носки","Шарф"]]
+],
+"Математика":[
+["1 + 1 = ?","2",["1","2","3"]],
+["Сколько пальцев на одной руке?","5",["4","5","6"]],
+["2 конфеты и ещё 1. Сколько стало?","3",["2","3","4"]],
+["Что больше: 3 или 1?","3",["1","2","3"]],
+["Сколько лап у двух кошек?","8",["4","6","8"]]
+],
+"Память":[
+["Запомни: солнце, мяч, кот. Что было вторым?","Мяч",["Кот","Солнце","Мяч"]],
+["Что надевают на голову?","Шапку",["Ботинки","Шапку","Перчатки"]],
+["Красный, синий, жёлтый. Какой цвет последним?","Жёлтый",["Синий","Красный","Жёлтый"]],
+["Чем узнают время?","Часами",["Часами","Ложкой","Мячом"]],
+["Что было первым: заяц, ёж, лиса?","Заяц",["Лиса","Ёж","Заяц"]]
+],
+"Окружающий мир":[
+["Где живут рыбы?","В воде",["В воде","На дереве","В песке"]],
+["После зимы наступает...","Весна",["Лето","Осень","Весна"]],
+["Что даёт корова?","Молоко",["Мёд","Молоко","Сок"]],
+["Какого цвета обычно трава?","Зелёная",["Синяя","Зелёная","Красная"]],
+["Кто собирает мёд?","Пчела",["Пчела","Кошка","Лошадь"]]
+]
+},
+"7–9":{
+"Логика":[
+["2, 4, 6, 8, ...","10",["9","10","12"]],
+["Что лишнее: яблоко, груша, морковь, слива?","Морковь",["Яблоко","Груша","Морковь","Слива"]],
+["У Маши 3 брата. Сколько всего детей, если она их единственная сестра?","4",["3","4","6"]],
+["▲ ■ ▲ ■ ▲ ...","■",["▲","■","●"]],
+["У квадрата срезали один угол. Сколько углов стало?","5",["3","4","5"]]
+],
+"Математика":[
+["7 × 3 = ?","21",["18","21","24"]],
+["Было 15 наклеек, 6 подарили. Сколько осталось?","9",["8","9","10"]],
+["Какое число делится на 2 без остатка?","18",["15","17","18"]],
+["Сколько минут в половине часа?","30",["15","20","30"]],
+["24 + 16 = ?","40",["38","40","42"]]
+],
+"Память":[
+["4, 9, 2, 7. Какое число было третьим?","2",["4","9","2"]],
+["Мяч, книга, ключ. Что было посередине?","Книга",["Ключ","Книга","Мяч"]],
+["Река, гора, лес. Какое слово было первым?","Река",["Лес","Гора","Река"]],
+["Сколько предметов: 🍎 ⭐ 🚗 🐟?","4",["3","4","5"]],
+["Какой порядок цветов светофора?","Красный, жёлтый, зелёный",["Зелёный, жёлтый, красный","Красный, жёлтый, зелёный","Жёлтый, красный, зелёный"]]
+],
+"Окружающий мир":[
+["Какая планета — Красная планета?","Марс",["Венера","Марс","Юпитер"]],
+["Сколько ног у паука?","8",["6","8","10"]],
+["Как называется замёрзшая вода?","Лёд",["Пар","Лёд","Соль"]],
+["Какое животное — млекопитающее?","Дельфин",["Акула","Дельфин","Осьминог"]],
+["Что растения поглощают из воздуха?","Углекислый газ",["Кислород","Углекислый газ","Азот"]]
+]
+},
+"10–12":{
+"Логика":[
+["3, 6, 12, 24, ...","48",["36","42","48"]],
+["Все вороны — птицы. Можно ли точно сказать, что все птицы — вороны?","Нет",["Да","Нет","Иногда"]],
+["У трёх сестёр один общий брат. Сколько детей?","4",["6","7","4"]],
+["Если сегодня среда, какой день через 10 дней?","Суббота",["Пятница","Суббота","Воскресенье"]],
+["Что лишнее: 9, 16, 25, 30, 36?","30",["16","30","36"]]
+],
+"Математика":[
+["15% от 200 = ?","30",["20","30","35"]],
+["3 × (8 + 4) − 10 = ?","26",["24","26","28"]],
+["Периметр квадрата со стороной 7 см?","28 см",["14 см","21 см","28 см"]],
+["x + 17 = 42. Найди x.","25",["24","25","26"]],
+["3/4 от 80 = ?","60",["40","50","60"]]
+],
+"Память":[
+["12, 5, 19, 8, 3. Какое число четвёртое?","8",["19","8","3"]],
+["Дуб, клён, берёза, сосна. Какое дерево третье?","Берёза",["Клён","Берёза","Сосна"]],
+["Север, восток, юг, запад. Что после востока?","Юг",["Север","Юг","Запад"]],
+["Сколько букв в слове «электричество»?","13",["12","13","14"]],
+["Что лишнее: апрель, июнь, вторник, август?","Вторник",["Апрель","Июнь","Вторник"]]
+],
+"Окружающий мир":[
+["Какой газ преобладает в атмосфере Земли?","Азот",["Кислород","Азот","Углекислый газ"]],
+["Превращение воды в пар — это...","Испарение",["Замерзание","Испарение","Конденсация"]],
+["Какой океан самый большой?","Тихий",["Атлантический","Индийский","Тихий"]],
+["Какой орган перекачивает кровь?","Сердце",["Лёгкие","Сердце","Печень"]],
+["Сколько планет в Солнечной системе?","8",["7","8","9"]]
+]
+},
+"13–16":{
+"Логика":[
+["1, 1, 2, 3, 5, 8, ...","13",["11","13","16"]],
+["Все зипы — зопы, ни один зоп не мип. Может ли зип быть мипом?","Нет",["Да","Нет","Иногда"]],
+["Если позавчера был понедельник, какой день послезавтра?","Пятница",["Четверг","Пятница","Суббота"]],
+["Найди лишнее: куб, шар, пирамида, квадрат.","Квадрат",["Куб","Шар","Квадрат"]],
+["У числа 144 квадратный корень равен...","12",["10","12","14"]]
+],
+"Математика":[
+["2x + 7 = 25. Найди x.","9",["8","9","10"]],
+["13² = ?","169",["156","169","179"]],
+["Вероятность орла при броске честной монеты?","1/2",["1/4","1/2","1/3"]],
+["Сократи дробь 42/56","3/4",["2/3","3/4","4/5"]],
+["20% от 350 = ?","70",["60","70","80"]]
+],
+"Память":[
+["17, 4, 29, 11, 6, 23. Какое число пятое?","6",["11","6","23"]],
+["Маяк, компас, карта, телескоп. Что второе?","Компас",["Маяк","Компас","Карта"]],
+["Запомни код 583174. Какая третья цифра?","3",["8","3","1"]],
+["Энергия, импульс, скорость, масса. Какое слово последнее?","Масса",["Скорость","Импульс","Масса"]],
+["Сколько цифр в числе 9072051?","7",["6","7","8"]]
+],
+"Окружающий мир":[
+["Какой элемент обозначается Fe?","Железо",["Фтор","Железо","Фосфор"]],
+["Как называется центр атома?","Ядро",["Электрон","Ядро","Орбита"]],
+["В каком слое атмосферы находится озоновый слой?","Стратосфера",["Тропосфера","Стратосфера","Мезосфера"]],
+["Наука о наследственности — это...","Генетика",["Экология","Генетика","Геология"]],
+["Какой материк пересекают все меридианы?","Антарктида",["Африка","Евразия","Антарктида"]]
+]
+}
 };
 
 let age=null,cat=null,qs=[],idx=0,earned=0,total=0,locked=false;
-
-try {
-  total=+(localStorage.getItem("umnyasha_stars")||0);
-} catch(e) {}
-
+try{total=+(localStorage.getItem("umnyasha_stars")||0)}catch(e){}
 const $=s=>document.querySelector(s);
 
-function screen(id) {
-  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
-  $("#"+id).classList.add("active");
+function screen(id){
+document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+$("#"+id).classList.add("active");
 }
+function stars(){$("#total").textContent=total}
 
-function stars() {
-  $("#total").textContent=total;
-}
-
-function selectGroup(id,attr,fn) {
-  $(id).addEventListener("click",e=>{
-    let b=e.target.closest("button["+attr+"]");
-    if(!b)return;
-    $(id).querySelectorAll("button").forEach(x=>x.classList.remove("selected"));
-    b.classList.add("selected");
-    fn(b.getAttribute(attr));
-  });
+function selectGroup(id,attr,fn){
+const parent=$(id);
+if(!parent){console.error("Не найден блок:",id);return}
+parent.addEventListener("click",e=>{
+const b=e.target.closest("button["+attr+"]");
+if(!b)return;
+parent.querySelectorAll("button").forEach(x=>x.classList.remove("selected"));
+b.classList.add("selected");
+fn(b.getAttribute(attr));
+});
 }
 
 selectGroup("#ages","data-age",v=>{
-  age=v;
-  $("#go").disabled=false;
+age=v;
+$("#go").disabled=false;
 });
-
 selectGroup("#category","data-cat",v=>{
-  cat=v;
-  $("#start").disabled=false;
+cat=v;
+$("#start").disabled=false;
 });
 
 $("#go").onclick=()=>{
-  if(!age)return;
-  $("#ageLabel").textContent="Возрастная группа: "+age+" лет";
-  screen("cats");
+if(!age)return;
+$("#ageLabel").textContent="Возрастная группа: "+age+" лет";
+screen("cats");
 };
-
-$("#back").onclick=()=>screen("home");
+$("#back").onclick=()=>screen("homeScreen");
 $("#backCats").onclick=()=>screen("cats");
 
 $("#start").onclick=()=>{
-  qs=bank[age][cat].map(a=>({
-    q:a[0],
-    a:a[1],
-    opts:[...a[2]].sort(()=>Math.random()-.5)
-  }));
-
-  idx=0;
-  earned=0;
-  $("#catLabel").textContent=cat;
-  screen("play");
-  render();
+if(!age||!cat||!bank[age]||!bank[age][cat])return;
+qs=bank[age][cat].map(a=>({q:a[0],a:a[1],opts:[...a[2]].sort(()=>Math.random()-.5)}));
+idx=0;earned=0;
+$("#catLabel").textContent=cat;
+screen("play");
+render();
 };
 
-function render() {
-  locked=false;
-  let q=qs[idx];
-
-  $("#count").textContent=`Вопрос ${idx+1} из 5`;
-  $("#bar").style.width=(idx*20)+"%";
-  $("#question").textContent=q.q;
-  $("#feedback").textContent="";
-  $("#feedback").className="feedback";
-  $("#next").hidden=true;
-  $("#answers").innerHTML="";
-
-  q.opts.forEach(v=>{
-    let b=document.createElement("button");
-    b.className="answer";
-    b.textContent=v;
-    b.onclick=()=>answer(b,v);
-    $("#answers").appendChild(b);
-  });
+function render(){
+locked=false;
+const q=qs[idx];
+$("#count").textContent=`Вопрос ${idx+1} из 5`;
+$("#bar").style.width=(idx*20)+"%";
+$("#question").textContent=q.q;
+$("#feedback").textContent="";
+$("#feedback").className="feedback";
+$("#next").hidden=true;
+$("#answers").innerHTML="";
+q.opts.forEach(v=>{
+const b=document.createElement("button");
+b.className="answer";
+b.textContent=v;
+b.onclick=()=>answer(b,v);
+$("#answers").appendChild(b);
+});
 }
 
-function answer(btn,v) {
-  if(locked)return;
-  locked=true;
-
-  let q=qs[idx];
-  let ok=v===q.a;
-
-  document.querySelectorAll(".answer").forEach(b=>{
-    b.disabled=true;
-    if(b.textContent===q.a)b.classList.add("correct");
-  });
-
-  if(!ok)btn.classList.add("wrong");
-
-  if(ok) {
-    earned+=2;
-    $("#feedback").textContent="Верно! +2 ⭐";
-    $("#feedback").classList.add("good");
-  } else {
-    $("#feedback").textContent="Правильный ответ: "+q.a;
-    $("#feedback").classList.add("bad");
-  }
-
-  $("#next").hidden=false;
-  $("#next").textContent=idx===4?"Итоги →":"Следующий вопрос →";
+function answer(btn,v){
+if(locked)return;
+locked=true;
+const q=qs[idx];
+const ok=v===q.a;
+document.querySelectorAll(".answer").forEach(b=>{
+b.disabled=true;
+if(b.textContent===q.a)b.classList.add("correct");
+});
+if(!ok)btn.classList.add("wrong");
+if(ok){
+earned+=2;
+$("#feedback").textContent="Верно! +2 ⭐";
+$("#feedback").classList.add("good");
+}else{
+$("#feedback").textContent="Правильный ответ: "+q.a;
+$("#feedback").classList.add("bad");
+}
+$("#next").hidden=false;
+$("#next").textContent=idx===4?"Итоги →":"Следующий вопрос →";
 }
 
 $("#next").onclick=()=>{
-  if(!locked)return;
-
-  if(idx<4) {
-    idx++;
-    render();
-  } else {
-    finish();
-  }
+if(!locked)return;
+if(idx<4){idx++;render()}else{finish()}
 };
 
-function finish() {
-  total+=earned;
-
-  try {
-    localStorage.setItem("umnyasha_stars",String(total));
-  } catch(e) {}
-
-  stars();
-
-  $("#bar").style.width="100%";
-  $("#score").textContent=`⭐ ${earned} / 10`;
-  $("#medal").textContent=earned===10?"🏆":earned>=6?"🌟":"💪";
-
-  $("#resultTitle").textContent=
-    earned===10?"Идеально!":
-    earned>=6?"Отличная работа!":
-    "Так держать!";
-
-  $("#resultText").textContent=
-    `Правильных ответов: ${earned/2} из 5.`;
-
-  $("#earned").textContent=
-    `Заработано ${earned} звёзд. Всего звёзд: ${total}.`;
-
-  screen("result");
+function finish(){
+total+=earned;
+try{localStorage.setItem("umnyasha_stars",String(total))}catch(e){}
+stars();
+$("#bar").style.width="100%";
+$("#score").textContent=`⭐ ${earned} / 10`;
+$("#medal").textContent=earned===10?"🏆":earned>=6?"🌟":"💪";
+$("#resultTitle").textContent=earned===10?"Идеально!":earned>=6?"Отличная работа!":"Так держать!";
+$("#resultText").textContent=`Правильных ответов: ${earned/2} из 5.`;
+$("#earned").textContent=`Заработано ${earned} звёзд. Всего звёзд: ${total}.`;
+screen("result");
 }
 
-$("#again").onclick=()=>{
-  $("#start").disabled=false;
-  screen("cats");
+$("#again").onclick=()=>screen("cats");
+$("#homeBtn").onclick=()=>{
+age=null;cat=null;
+$("#go").disabled=true;$("#start").disabled=true;
+document.querySelectorAll(".tile").forEach(x=>x.classList.remove("selected"));
+screen("homeScreen");
 };
-
-$("#home").onclick=()=>{
-  age=null;
-  cat=null;
-  $("#go").disabled=true;
-  $("#start").disabled=true;
-
-  document.querySelectorAll(".tile").forEach(x=>{
-    x.classList.remove("selected");
-  });
-
-  screen("home");
-};
-
 stars();
 </script>
 </body>
