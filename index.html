@@ -1,1732 +1,500 @@
-
-rs: 0,
-  erudite: {
-    solved: 0,
-    correct: 0,
-    streak: 0,
-    bestStreak: 0,
-    levelDone: [],
-    usedHints: []
-  },
-  child: {
-    solved: 0,
-    correct: 0,
-    streak: 0,
-    bestStreak: 0
-  },
-  medals: []
-};
-
-try {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    progress = {
-      ...progress,
-      ...JSON.parse(stored)
-    };
-    progress.erudite = {
-      ...progress.erudite,
-      ...(JSON.parse(stored).erudite || {})
-    };
-    progress.child = {
-      ...progress.child,
-      ...(JSON.parse(stored).child || {})
-    };
-  }
-} catch (e) {
-  console.warn('Не удалось загрузить прогресс', e);
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>УМНЯША — учись и играй</title>
+<style>
+:root{
+ --bg:#fff;--lav:#a995e8;--lav2:#eee9fb;--ink:#29263a;
+ --muted:#89869a;--gray:#f5f4f8;--yellow:#ffd45c;
+ --green:#69bd91;--red:#e77d88;--radius:19px;
 }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+#app{max-width:760px;margin:auto;min-height:100vh;padding:18px 16px 95px}
+header{display:flex;align-items:center;justify-content:space-between;
+ padding:8px 2px 18px}
+.logo{font-size:25px;font-weight:900;letter-spacing:1px;color:var(--lav)}
+.logo span{color:var(--yellow)}
+.stars{background:#fff8df;padding:9px 14px;border-radius:30px;font-weight:800}
+.screen{display:none}
+.screen.active{display:block}
+h1{font-size:27px;margin:8px 0}
+h2{font-size:21px;margin:8px 0}
+p{color:var(--muted)}
+.card{background:white;border:1px solid #eeeaf4;border-radius:var(--radius);
+ padding:17px;margin:12px 0;box-shadow:0 4px 16px #40336a08}
+.hero{background:linear-gradient(135deg,#f1ecff,#fff8e9);
+ border:0;padding:23px;border-radius:25px;display:flex;align-items:center;gap:12px}
+.owl{font-size:76px;line-height:1}
+.hero p{margin:5px 0}
+.btn{border:0;border-radius:14px;padding:13px 17px;
+ background:var(--lav);color:white;font-weight:800;width:100%;margin-top:9px}
+.btn.light{background:var(--lav2);color:#65558e}
+.btn.yellow{background:var(--yellow);color:#51421c}
+.btn.gray{background:var(--gray);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.tile{background:var(--gray);border:1px solid #efedf3;border-radius:17px;
+ padding:17px 12px;text-align:center;min-height:105px}
+.tile .emoji{font-size:32px;display:block;margin-bottom:6px}
+.tile b{font-size:14px}
+.small{font-size:13px;color:var(--muted)}
+.progress{height:9px;background:#eeeaf5;border-radius:20px;overflow:hidden;margin:12px 0}
+.progress div{height:100%;background:var(--lav);width:0%;transition:.2s}
+.question{font-size:21px;font-weight:800;margin:20px 0}
+.answers{display:grid;gap:10px}
+.answer{background:#f5f3fa;border:2px solid transparent;border-radius:14px;
+ padding:14px;text-align:left;color:var(--ink);font-weight:650}
+.answer.correct{border-color:var(--green);background:#eaf8f0}
+.answer.wrong{border-color:var(--red);background:#fff0f1}
+input[type=text]{width:100%;padding:14px;border:1px solid #ddd7eb;
+ border-radius:13px;outline:none;margin:8px 0}
+.feedback{padding:14px;border-radius:14px;background:#f1edfb;margin-top:14px}
+.feedback.good{background:#eaf8f0}
+.feedback.bad{background:#fff0f1}
+.medal{background:#f8f6fc;border-radius:15px;padding:15px;text-align:center}
+.medal .emoji{font-size:35px}
+.medal.locked{opacity:.45;filter:grayscale(1)}
+.metric{background:var(--gray);padding:16px;border-radius:15px}
+.metric strong{font-size:24px;display:block}
+.metric span{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.tab{border:0;border-radius:30px;padding:9px 14px;background:var(--gray)}
+.tab.active{background:var(--lav2);color:#67568f;font-weight:800}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#ffffffed;
+ border-top:1px solid #eeeaf4;display:flex;justify-content:center;
+ gap:5px;padding:9px 5px calc(9px + env(safe-area-inset-bottom));
+ z-index:5}
+.bottom button{border:0;background:none;color:var(--muted);
+ font-size:11px;min-width:65px;padding:5px}
+.bottom button span{display:block;font-size:21px}
+.bottom button.active{color:var(--lav);font-weight:800}
+.hidden{display:none!important}
+.modal{position:fixed;inset:0;background:#29233d88;display:none;
+ align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal.open{display:flex}
+.modalbox{background:white;border-radius:22px;padding:22px;width:min(420px,100%)}
+min-width:600px{#app{padding-top:25px}.hero{padding:30px}}
+<
 
-let eruditeLevel = 'Разминка';
-let eruditeQuestions = [];
-let eruditeIndex = 0;
-let eruditeCorrect = 0;
-let eruditeAnswered = false;
-let eruditeHintUsed = false;
 
-function saveProgress() {
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(progress)
-    );
-  } catch (e) {
-    console.warn('Не удалось сохранить прогресс', e);
-  }
+iv>
+  <div class="metric"><strong id="statPercent">0%</strong><span>Успех</span></div>
+  <div class="metric"><strong id="statStreak">0</strong><span>Текущая серия</span></div>
+  <div class="metric"><strong id="statBest">0</strong><span>Лучшая серия</span></div>
+  <div class="metric"><strong id="statMedals">0</strong><span>Медали</span></div>
+ </div>
+ <div class="card"><b>Детская игра</b><p id="childStats">Пока нет результатов.</p>
+ <b>Эрудит</b><p id="eruditeStats">Пока нет результатов.</p></div>
+ <button class="btn gray" onclick="resetProgress()">Сбросить весь прогресс</button>
+</section>
+
+<section class="screen" id="medals">
+ <h1>Мои медали 🏅</h1><p>Медали выдаются за достижения. Они не списывают и не добавляют звёзды.</p>
+ <div class="grid" id="medalGrid"></div>
+</section>
+</div>
+
+<nav class="bottom">
+ <button class="active" data-nav="home" onclick="show('home')"><span>🏠</span>Главная</button>
+ <button data-nav="games" onclick="show('games')"><span>🎮</span>Игры</button>
+ <button data-nav="profile" onclick="show('profile')"><span>👤</span>Профиль</button>
+ <button data-nav="medals" onclick="show('medals')"><span>🏅</span>Медали</button>
+</nav>
+
+<div class="modal" id="medalModal" onclick="if(event.target===this)this.classList.remove('open')">
+ <div class="modalbox"><h2 id="medalTitle"></h2><p id="medalDescription"></p>
+ <button class="btn" onclick="document.getElementById('medalModal').classList.remove('open')">Понятно</button></div>
+</div>
+
+<script>
+const STORAGE='umnyasha_progress_v1';
+const fresh=()=>({
+ stars:0,name:'Умняшка',solved:0,correct:0,streak:0,best:0,
+ child:{solved:0,correct:0},erudite:{solved:0,correct:0},
+ medals:[],lastLevel:'',lastMode:''
+});
+let data=fresh();
+try{const saved=JSON.parse(localStorage.getItem(STORAGE));if(saved)data={...data,...saved,child:{...data.child,...saved.child},erudite:{...data.erudite,...saved.erudite}}}catch(e){}
+function save(){try{localStorage.setItem(STORAGE,JSON.stringify(data))}catch(e){alert('Не удалось сохранить прогресс в этом браузере.')}}
+function $(id){return document.getElementById(id)}
+function show(id){
+ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+ $(id).classList.add('active');
+ document.querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('active',b.dataset.nav===id));
+ refresh();
 }
-
-function go(id) {
-  document.querySelectorAll('.view').forEach(view => {
-    view.classList.remove('active');
-  });
-
-  const target = document.getElementById(id);
-  if (target) target.classList.add('active');
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function refresh(){
+ $('starCount').textContent=data.stars;
+ $('homeStats').textContent='Решено вопросов: '+data.solved+' · Правильно: '+data.correct;
+ $('homeProgress').style.width=(data.solved?Math.round(data.correct/data.solved*100):0)+'%';
+ $('playerName').textContent=data.name;
+ $('statSolved').textContent=data.solved;
+ $('statCorrect').textContent=data.correct;
+ $('statPercent').textContent=(data.solved?Math.round(data.correct/data.solved*100):0)+'%';
+ $('statStreak').textContent=data.streak;
+ $('statBest').textContent=data.best;
+ $('statMedals').textContent=data.medals.length;
+ $('childStats').textContent=`Решено: ${data.child.solved}, правильно: ${data.child.correct}`;
+ $('eruditeStats').textContent=`Решено: ${data.erudite.solved}, правильно: ${data.erudite.correct}`;
+ renderMedals();
 }
-
-function getReward(level) {
-  if (level === 'Гений') return 5;
-  if (level === 'Профи') return 3;
-  return 2;
-}
-
-function getCurrentQuestion() {
-  return eruditeQuestions[eruditeIndex];
-}
-
-function startE(level) {
-  eruditeLevel = level;
-  eruditeQuestions = questions.filter(q => q.level === level);
-
-  if (eruditeQuestions.length === 0) {
-    alert('В этом уровне пока нет вопросов.');
-    return;
-  }
-
-  eruditeIndex = 0;
-  eruditeCorrect = 0;
-  eruditeAnswered = false;
-  eruditeHintUsed = false;
-
-  go('equiz');
-  askE();
-}
-
-function askE() {
-  const q = getCurrentQuestion();
-  if (!q) return;
-
-  eruditeAnswered = false;
-  eruditeHintUsed = false;
-
-  const questionText = document.getElementById('eQuestion');
-  const counter = document.getElementById('eCounter');
-  const level = document.getElementById('eLevel');
-  const progressBar = document.getElementById('eProgress');
-  const options = document.getElementById('eOptions');
-  const typed = document.getElementById('eTyped');
-  const feedback = document.getElementById('eFeedback');
-  const hintText = document.getElementById('eHintText');
-
-  if (questionText) questionText.textContent = q.q;
-  if (counter) {
-    counter.textContent =
-      `Вопрос ${eruditeIndex + 1} из ${eruditeQuestions.length}`;
-  }
-  if (level) level.textContent = eruditeLevel;
-
-  if (progressBar) {
-    progressBar.style.width =
-      `${(eruditeIndex / eruditeQuestions.length) * 100}%`;
-  }
-
-  if (feedback) {
-    feedback.textContent = '';
-    feedback.className = '';
-  }
-
-  if (hintText) hintText.textContent = '';
-
-  if (options) {
-    options.innerHTML = '';
-    options.style.display = q.type === 'choice' ? 'grid' : 'none';
-
-    if (q.type === 'choice') {
-      q.options.forEach((option, index) => {
-        const button = document.createElement('button');
-        button.className = 'answer-option';
-        button.textContent = option;
-        button.dataset.answer = index;
-        button.addEventListener('click', () => answerE(index));
-        options.appendChild(button);
-      });
-    }
-  }
-
-  if (typed) {
-    typed.value = '';
-    typed.style.display = q.type === 'input' ? 'block' : 'none';
-  }
-
-  const checkButton = document.getElementById('eCheck');
-  if (checkButton) {
-    checkButton.style.display = q.type === 'input' ? 'block' : 'none';
-  }
-
-  const nextButton = document.getElementById('eNext');
-  if (nextButton) nextButton.style.display = 'none';
-
-  const hintButton = document.getElementById('eHint');
-  if (hintButton) hintButton.disabled = false;
-}
-
-function answerE(index) {
-  if (eruditeAnswered) return;
-
-  const q = getCurrentQuestion();
-  if (!q || q.type !== 'choice') return;
-
-  const correct = Number(index) === Number(q.answer);
-
-  document.querySelectorAll('.answer-option').forEach(button => {
-    button.disabled = true;
-
-    if (Number(button.data
-
-
-set.answer) === Number(q.answer)) {
-      button.classList.add('correct');
-    } else if (Number(button.dataset.answer) === Number(index)) {
-      button.classList.add('wrong');
-    }
-  });
-
-  finishAnswerE(correct);
-}
-
-function checkTyped() {
-  if (eruditeAnswered) return;
-
-  const q = getCurrentQuestion();
-  const input = document.getElementById('eTyped');
-
-  if (!q || !input) return;
-
-  const userAnswer = normalizeAnswer(input.value);
-  const correctAnswer = normalizeAnswer(String(q.answer));
-
-  if (!userAnswer) {
-    input.focus();
-    return;
-  }
-
-  finishAnswerE(userAnswer === correctAnswer);
-}
-
-function normalizeAnswer(value) {
-  return String(value)
-    .toLowerCase()
-    .trim()
-    .replace(/ё/g, 'е')
-    .replace(/[.,!?;:()[\]{}"']/g, '')
-    .replace(/\s+/g, ' ');
-}
-
-function finishAnswerE(correct) {
-  if (eruditeAnswered) return;
-
-  eruditeAnswered = true;
-
-  const q = getCurrentQuestion();
-  const feedback = document.getElementById('eFeedback');
-  const nextButton = document.getElementById('eNext');
-  const checkButton = document.getElementById('eCheck');
-  const hintButton = document.getElementById('eHint');
-
-  progress.erudite.solved++;
-
-  if (correct) {
-    eruditeCorrect++;
-    progress.erudite.correct++;
-    progress.erudite.streak++;
-
-    progress.erudite.bestStreak = Math.max(
-      progress.erudite.bestStreak,
-      progress.erudite.streak
-    );
-
-    const reward = getReward(eruditeLevel);
-    progress.eruditeStars += reward;
-
-    if (feedback) {
-      feedback.textContent = `Правильно! +${reward} ⭐`;
-      feedback.className = 'feedback correct';
-    }
-  } else {
-    progress.erudite.streak = 0;
-
-    if (feedback) {
-      feedback.textContent =
-        `Пока неверно. ${q.explanation || 'Попробуй следующий вопрос!'}`;
-      feedback.className = 'feedback wrong';
-    }
-  }
-
-  if (correct && q.explanation && feedback) {
-    feedback.textContent += ` ${q.explanation}`;
-  }
-
-  if (checkButton) checkButton.style.display = 'none';
-  if (hintButton) hintButton.disabled = true;
-  if (nextButton) nextButton.style.display = 'block';
-
-  saveProgress();
-  updateEruditeStats();
-  checkEruditeAchievements();
-}
-
-function hint() {
-  if (eruditeAnswered || eruditeHintUsed) return;
-
-  if (progress.eruditeStars < 3) {
-    const feedback = document.getElementById('eFeedback');
-    if (feedback) {
-      feedback.textContent = 'Для подсказки нужно 3 звезды.';
-      feedback.className = 'feedback';
-    }
-    return;
-  }
-
-  const q = getCurrentQuestion();
-
-  if (!q) return;
-
-  progress.eruditeStars -= 3;
-  eruditeHintUsed = true;
-
-  const hintButton = document.getElementById('eHint');
-  const hintText = document.getElementById('eHintText');
-
-  if (hintButton) hintButton.disabled = true;
-
-  if (hintText) {
-    hintText.textContent =
-      q.hint || 'Внимательно подумай над условием и исключи неподходящие варианты.';
-  }
-
-  saveProgress();
-  updateEruditeStats();
-}
-
-function nextE() {
-  if (!eruditeAnswered) return;
-
-  eruditeIndex++;
-
-  if (eruditeIndex >= eruditeQuestions.length) {
-    finishE();
-    return;
-  }
-
-  askE();
-}
-
-function finishE() {
-  const alreadyDone =
-    progress.erudite.levelDone.includes(eruditeLevel);
-
-  if (!alreadyDone) {
-    progress.erudite.levelDone.push(eruditeLevel);
-  }
-
-  saveProgress();
-
-  const result = document.getElementById('eResult');
-  const resultText = document.getElementById('eResultText');
-  const resultStars = document.getElementById('eResultStars');
-
-  if (resultText) {
-    resultText.textContent =
-      `Правильных ответов: ${eruditeCorrect} из ${eruditeQuestions.length}`;
-  }
-
-  if (resultStars) {
-    resultStars.textContent =
-      `Заработано звёзд: ${eruditeCorrect * getReward(eruditeLevel)} ⭐`;
-  }
-
-  if (result) result.classList.add('active');
-
-  go('eresult');
-  updateEruditeStats();
-  checkEruditeAchievements();
-}
-
-function updateEruditeStats() {
-  const stars = document.getElementById('eruditeStars');
-  const solved = document.getElementById('eruditeSolved');
-  const correct = document.getElementById('eruditeCorrect');
-  const percent = document.getElementById('eruditeP
-
-
-торник','Среда','Воскресенье'],correct:1,why:'Завтра для понедельника — вторник. Значит, сегодня вторник.'},
-{level:'Профи',type:'input',q:'У числа 100 отняли 10. Сколько раз нужно прибавить 10, чтобы снова получить 100?',answer:['1','один','один раз'],why:'После вычитания получилось 90. Достаточно одного прибавления 10.'},
-{level:'Профи',type:'choice',q:'В забеге ты обогнал участника, который бежал вторым. На каком месте ты теперь?',a:['Первом','Втором','Третьем','Четвёртом'],correct:1,why:'Ты занял его место — второе.'},
-{level:'Профи',type:'input',q:'Сколько граней у обычного куба?',answer:['6','шесть'],why:'У куба шесть одинаковых квадратных граней.'},
-{level:'Профи',type:'choice',q:'Какое слово лишнее: январь, март, среда, июль?',a:['Январь','Март','Среда','Июль'],correct:2,why:'Среда — день недели, остальные слова обозначают месяцы.'},
-{level:'Профи',type:'input',q:'Три станка делают три детали за три минуты. За сколько минут шесть таких станков сделают шесть деталей?',answer:['3','три','три минуты'],why:'Каждый станок делает одну деталь за три минуты. Шесть станков одновременно сделают шесть деталей за те же три минуты.'},
-{level:'Профи',type:'choice',q:'У какого числа сумма цифр равна 10?',a:['28','37','46','Все перечисленные'],correct:3,why:'2+8, 3+7 и 4+6 — во всех случаях получается 10.'},
-{level:'Гений',type:'input',q:'Продолжи ряд: 1, 4, 9, 16, 25, ...',answer:['36','тридцать шесть'],why:'Это квадраты натуральных чисел: 1², 2², 3², 4², 5². Следующее — 6² = 36.'},
-{level:'Гений',type:'choice',q:'Есть три выключателя и одна лампа в закрытой комнате. Можно зайти в комнату только один раз. Как определить нужный выключатель?',a:['Включить все три','Использовать тепло лампы','Попросить другого человека','Никак'],correct:1,why:'Включи первый выключатель на некоторое время, затем выключи его и включи второй. Зайди в комнату: горящая лампа связана со вторым, тёплая выключенная — с первым, холодная — с третьим.'},
-{level:'Гений',type:'input',q:'Сколько квадратов на шахматной доске 8 на 8, если считать квадраты всех размеров?',answer:['204','двести четыре'],why:'Суммируем квадраты размеров от 1×1 до 8×8: 64+49+36+25+16+9+4+1 = 204.'},
-{level:'Гений',type:'choice',q:'Часы показывают 3:15. Какой угол между часовой и минутной стрелками?',a:['0°','7,5°','15°','30°'],correct:1,why:'Минутная стрелка стоит на 90°. Часовая за 15 минут прошла четверть пути от 3 к 4 — 7,5°. Разница равна 7,5°.'},
-{level:'Гений',type:'input',q:'Если 5 машин делают 5 деталей за 5 минут, сколько минут понадобится 100 машинам, чтобы сделать 100 деталей?',answer:['5','пять','пять минут'],why:'Каждая машина делает одну деталь за пять минут. Все 100 машин работают одновременно.'},
-{level:'Гений',type:'choice',q:'Какое число пропущено: 2, 3, 5, 8, 12, 17, ...?',a:['21','22','23','24'],correct:2,why:'Разница между числами увеличивается на единицу: +1, +2, +3, +4, +5, значит дальше +6. 17+6=23.'},
-{level:'Гений',type:'input',q:'У прямоугольника периметр 30 см. Одна сторона равна 5 см. Чему равна другая сторона?',answer:['10','10 см','десять'],why:'Периметр равен 2 × (5 + x) = 30. Значит, 5 + x = 15, а x = 10.'},
-{level:'Гений',type:'choice',q:'В семье у каждого из шести сыновей есть одна сестра. Сколько всего детей?',a:['6','7','12','13'],correct:1,why:'У всех шести сыновей одна общая сестра. Всего семь детей.'},
-{level:'Гений',type:'input',q:'Сколько раз цифра 9 встречается в числах от 1 до 100?',answer:['20','двадцать'],why:'В разряде единиц цифра 9 встречается 10 раз, и в разряде десятков ещё 10 раз. Всего 20.'},
-{level:'Гений',type:'choice',q:'У тебя есть две верёвки. Каждая сгорает ровно за час, но горит неравномерно. Как отмерить 45 минут?',a:['Поджечь одну с двух концов, вторую с одного','Поджечь обе с одного конца','Поджечь обе с двух концов','Это невозможно'],correct:0,why:'Первая верёвка с двух концов сгорит за 30 минут. В этот момент подожги второй конец второй верёвки: оставшаяся часть сгорит за 15 минут. Итого 45 минут.'}
-]; // ЧАСТЬ 4. ЛОГИКА ЭРУДИТА
-
-const STORAGE_KEY = 'umnyasha_progress_v1';
-
-let progress = {
-  childStars: 0,
-  eruditeSta
-
-
-ress.child.bestStreak,
-      progress.child.streak
-    );
-
-    progress.childStars += 2;
-
-    if (feedback) {
-      feedback.textContent = 'Отлично! Ты заработал 2 ⭐';
-      feedback.className = 'feedback correct';
-    }
-  } else {
-    progress.child.streak = 0;
-
-    if (feedback) {
-      feedback.textContent =
-        `Не страшно! Правильный ответ: ${q.options[q.answer]}`;
-      feedback.className = 'feedback wrong';
-    }
-  }
-
-  progress.child.solved++;
-
-  if (q.explanation && feedback) {
-    feedback.textContent += ` ${q.explanation}`;
-  }
-
-  const next = document.getElementById('childNext');
-  if (next) next.style.display = 'block';
-
-  saveProgress();
-  updateChildStats();
-  checkChildAchievements();
-}
-
-function nextChildQuestion() {
-  if (!childAnswered) return;
-
-  childIndex++;
-
-  if (childIndex >= childRound.length) {
-    finishChildGame();
-    return;
-  }
-
-  askChildQuestion();
-}
-
-function finishChildGame() {
-  const resultText = document.getElementById('childResultText');
-  const resultStars = document.getElementById('childResultStars');
-
-  if (resultText) {
-    resultText.textContent =
-      `Правильных ответов: ${childCorrect} из ${childRound.length}`;
-  }
-
-  if (resultStars) {
-    resultStars.textContent =
-      `Заработано звёзд: ${childCorrect * 2} ⭐`;
-  }
-
-  saveProgress();
-  updateChildStats();
-  checkChildAchievements();
-
-  go('childResult');
-}
-
-function updateChildStats() {
-  const stars = document.getElementById('childStars');
-  const solved = document.getElementById('childSolved');
-  const correct = document.getElementById('childCorrect');
-  const percent = document.getElementById('childPercent');
-
-  if (stars) stars.textContent = progress.childStars;
-  if (solved) solved.textContent = progress.child.solved;
-  if (correct) correct.textContent = progress.child.correct;
-
-  if (percent) {
-    percent.textContent = progress.child.solved
-      ? Math.round(
-          progress.child.correct /
-          progress.child.solved * 100
-        ) + '%'
-      : '0%';
-  }
-}
-
-function checkChildAchievements() {
-  const solved = progress.child.solved;
-  const streak = progress.child.bestStreak;
-
-  [25, 100, 250, 500, 1000].forEach(number => {
-    if (solved >= number) {
-      addMedal(`child_${number}`);
-    }
-  });
-
-  [10, 25, 50, 100].forEach(number => {
-    if (streak >= number) {
-      addMedal(`streak_${number}`);
-    }
-  });
-
-  saveProgress();
-}
-
-function shuffleArray(array) {
-  const copy = [...array];
-
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-
-  return copy;
-} // ЧАСТЬ 6. ПРОФИЛЬ И ОБЩАЯ СТАТИСТИКА
-
-function updateProfile() {
-  const totalStars =
-    progress.childStars + progress.eruditeStars;
-
-  const totalSolved =
-    progress.child.solved + progress.erudite.solved;
-
-  const totalCorrect =
-    progress.child.correct + progress.erudite.correct;
-
-  const totalPercent = totalSolved
-    ? Math.round(totalCorrect / totalSolved * 100)
-    : 0;
-
-  const elements = {
-    totalStars: totalStars,
-    profileStars: totalStars,
-    childStars: progress.childStars,
-    eruditeStars: progress.eruditeStars,
-
-    totalSolved: totalSolved,
-    totalCorrect: totalCorrect,
-    totalPercent: totalPercent,
-
-    childSolved: progress.child.solved,
-    childCorrect: progress.child.correct,
-
-    eruditeSolved: progress.erudite.solved,
-    eruditeCorrect: progress.erudite.correct,
-
-    medalsCount: progress.medals.length
-  };
-
-  Object.entries(elements).forEach(([id, value]) => {
-    const element = document.getElementById(id);
-
-    if (element) {
-      element.textContent = value;
-    }
-  });
-
-  updateChildStats();
-  updateEruditeStats();
-  updateMedalCounter();
-}
-
-function updateMedalCounter() {
-  const counter = document.getElementById('medalsCount');
-
-  if (counter) {
-    counter.textContent = progress.medals.length;
-  }
-}
-
-function getTotalProgress() {
-  const solved =
-    progress.child.solved + progress.erudite.solved;
-
-  const correct =
-    progress.child.correct + progress.erudite.correct;
-
-  return {
-    solved,
-    c
-
-
-ercent');
-
-  if (stars) stars.textContent = progress.eruditeStars;
-  if (solved) solved.textContent = progress.erudite.solved;
-  if (correct) correct.textContent = progress.erudite.correct;
-
-  if (percent) {
-    percent.textContent = progress.erudite.solved
-      ? Math.round(
-          progress.erudite.correct /
-          progress.erudite.solved * 100
-        ) + '%'
-      : '0%';
-  }
-}
-
-function checkEruditeAchievements() {
-  const solved = progress.erudite.solved;
-  const streak = progress.erudite.bestStreak;
-
-  const milestones = [25, 100, 250, 500, 1000];
-
-  milestones.forEach(number => {
-    if (solved >= number) {
-      addMedal(`erudite_${number}`);
-    }
-  });
-
-  [10, 25, 50, 100].forEach(number => {
-    if (streak >= number) {
-      addMedal(`streak_${number}`);
-    }
-  });
-
-  progress.erudite.levelDone.forEach(level => {
-    addMedal(`level_${level}`);
-  });
-
-  saveProgress();
-}
-
-function addMedal(id) {
-  if (!progress.medals.includes(id)) {
-    progress.medals.push(id);
-  }
-} // ЧАСТЬ 5. ДЕТСКАЯ ИГРА
-
-let childAge = null;
-let childTopic = null;
-let childRound = [];
-let childIndex = 0;
-let childCorrect = 0;
-let childAnswered = false;
-
-function chooseAge(age) {
-  childAge = age;
-
-  document.querySelectorAll('[data-age]').forEach(button => {
-    button.classList.toggle(
-      'selected',
-      button.dataset.age === String(age)
-    );
-  });
-
-  go('topics');
-}
-
-function chooseTopic(topic) {
-  childTopic = topic;
-
-  const title = document.getElementById('childTopicTitle');
-  if (title) title.textContent = topic;
-
-  startChildGame();
-}
-
-function startChildGame() {
-  if (!childAge || !childTopic) {
-    alert('Сначала выбери возраст и тему.');
-    return;
-  }
-
-  const available = childQuestions.filter(q =>
-    String(q.age) === String(childAge) &&
-    q.topic === childTopic
-  );
-
-  if (!available.length) {
-    alert('В этой теме пока нет вопросов. Попробуй другую!');
-    return;
-  }
-
-  childRound = shuffleArray(available).slice(0, 5);
-
-  if (childRound.length < 5) {
-    childRound = shuffleArray(available);
-  }
-
-  childIndex = 0;
-  childCorrect = 0;
-  childAnswered = false;
-
-  go('childQuiz');
-  askChildQuestion();
-}
-
-function askChildQuestion() {
-  const q = childRound[childIndex];
-  if (!q) return;
-
-  childAnswered = false;
-
-  const question = document.getElementById('childQuestion');
-  const counter = document.getElementById('childCounter');
-  const options = document.getElementById('childOptions');
-  const feedback = document.getElementById('childFeedback');
-  const next = document.getElementById('childNext');
-  const progressBar = document.getElementById('childProgress');
-
-  if (question) question.textContent = q.q;
-
-  if (counter) {
-    counter.textContent =
-      `Вопрос ${childIndex + 1} из ${childRound.length}`;
-  }
-
-  if (progressBar) {
-    progressBar.style.width =
-      `${(childIndex / childRound.length) * 100}%`;
-  }
-
-  if (feedback) {
-    feedback.textContent = '';
-    feedback.className = 'feedback';
-  }
-
-  if (next) next.style.display = 'none';
-
-  if (options) {
-    options.innerHTML = '';
-
-    q.options.forEach((option, index) => {
-      const button = document.createElement('button');
-
-      button.className = 'answer-option';
-      button.textContent = option;
-
-      button.addEventListener('click', () => {
-        answerChild(index);
-      });
-
-      options.appendChild(button);
-    });
-  }
-}
-
-function answerChild(index) {
-  if (childAnswered) return;
-
-  const q = childRound[childIndex];
-  if (!q) return;
-
-  childAnswered = true;
-
-  const correct = Number(index) === Number(q.answer);
-  const buttons = document.querySelectorAll(
-    '#childOptions .answer-option'
-  );
-
-  buttons.forEach((button, i) => {
-    button.disabled = true;
-
-    if (i === Number(q.answer)) {
-      button.classList.add('correct');
-    } else if (i === Number(index)) {
-      button.classList.add('wrong');
-    }
-  });
-
-  const feedback = document.getElementById('childFeedback');
-
-  if (correct) {
-    childCorrect++;
-    progress.child.correct++;
-    progress.child.streak++;
-
-    progress.child.bestStreak = Math.max(
-      prog
-
-
-orrect,
-    percent: solved
-      ? Math.round(correct / solved * 100)
-      : 0,
-    stars:
-      progress.childStars + progress.eruditeStars
-  };
-}
-
-function getPlayerRank() {
-  const solved = getTotalProgress().solved;
-
-  if (solved >= 1000) return 'Легенда знаний';
-  if (solved >= 500) return 'Мастер знаний';
-  if (solved >= 250) return 'Большой эрудит';
-  if (solved >= 100) return 'Знаток';
-  if (solved >= 25) return 'Любознательный';
-  return 'Начинающий исследователь';
-}
-
-function updatePlayerRank() {
-  const rank = document.getElementById('playerRank');
-
-  if (rank) {
-    rank.textContent = getPlayerRank();
-  }
-}
-
-function updateBestStreak() {
-  const childStreak = progress.child.bestStreak;
-  const eruditeStreak = progress.erudite.bestStreak;
-
-  const best = Math.max(childStreak, eruditeStreak);
-
-  const element = document.getElementById('bestStreak');
-
-  if (element) {
-    element.textContent = best;
-  }
-}
-
-function updateLevelProgress() {
-  const levels = ['Разминка', 'Профи', 'Гений'];
-
-  levels.forEach(level => {
-    const element = document.getElementById(
-      'level_' + level.toLowerCase()
-    );
-
-    if (!element) return;
-
-    const completed =
-      progress.erudite.levelDone.includes(level);
-
-    element.textContent = completed
-      ? 'Пройдено'
-      : 'Не пройдено';
-
-    element.classList.toggle('completed', completed);
-  });
-}
-
-function renderProfile() {
-  updateProfile();
-  updatePlayerRank();
-  updateBestStreak();
-  updateLevelProgress();
-
-  const total = getTotalProgress();
-
-  const summary = document.getElementById('profileSummary');
-
-  if (summary) {
-    summary.textContent =
-      `Решено ${total.solved} вопросов. ` +
-      `Правильных ответов: ${total.correct}.`;
-  }
-
-  const progressBar =
-    document.getElementById('profileProgress');
-
-  if (progressBar) {
-    progressBar.style.width = total.percent + '%';
-  }
-
-  const percentLabel =
-    document.getElementById('profilePercent');
-
-  if (percentLabel) {
-    percentLabel.textContent = total.percent + '%';
-  }
-
-  const childRecord =
-    document.getElementById('childBestStreak');
-
-  if (childRecord) {
-    childRecord.textContent = progress.child.bestStreak;
-  }
-
-  const eruditeRecord =
-    document.getElementById('eruditeBestStreak');
-
-  if (eruditeRecord) {
-    eruditeRecord.textContent =
-      progress.erudite.bestStreak;
-  }
-}
-
-function resetProgressConfirmation() {
-  const confirmed = confirm(
-    'Ты действительно хочешь сбросить весь прогресс? ' +
-    'Звёзды, достижения и статистика будут потеряны.'
-  );
-
-  if (!confirmed) return;
-
-  progress = {
-    childStars: 0,
-    eruditeStars: 0,
-
-    erudite: {
-      solved: 0,
-      correct: 0,
-      streak: 0,
-      bestStreak: 0,
-      levelDone: [],
-      usedHints: []
-    },
-
-    child: {
-      solved: 0,
-      correct: 0,
-      streak: 0,
-      bestStreak: 0
-    },
-
-    medals: []
-  };
-
-  saveProgress();
-  renderProfile();
-
-  alert('Прогресс сброшен.');
-}
-
-function openProfile() {
-  renderProfile();
-  go('profile');
-}
-
-// Обновление статистики после загрузки приложения
-
-function initializeProfile() {
-  renderProfile();
-  updateProfile();
-  updatePlayerRank();
-  updateBestStreak();
-  updateLevelProgress();
-}
-
-// Сохраняем прогресс после каждого обновления
-
-function saveAndRefreshProfile() {
-  saveProgress();
-  renderProfile();
-}
-
-// Дополнительная информация для профиля
-
-function getProfileData() {
-  const total = getTotalProgress();
-
-  return {
-    rank: getPlayerRank(),
-    stars: total.stars,
-    solved: total.solved,
-    correct: total.correct,
-    percent: total.percent,
-
-    child: {
-      stars: progress.childStars,
-      solved: progress.child.solved,
-      correct: progress.child.correct,
-      bestStreak: progress.child.bestStreak
-    },
-
-    erudite: {
-      stars: progress.eruditeStars,
-      solved: progress.erudite.solved,
-      correct: progress.erudite.correct,
-      bestStreak: progress.erudite.bestStreak,
-      completedLevels: [
-        ...progress.erudite.levelDone
-      ]
-    },
-
-    medals: [...progress.medals]
-  };
-} // ==========================================
-// Ч
-
-
-}
-                </span>
-
-                <span class="medal-status">
-                  ${unlocked ? 'Получена' : 'Ещё впереди'}
-                </span>
-              </button>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const counter = document.getElementById('medalsCount');
-
-  if (counter) {
-    counter.textContent = `${earned.length} / ${medalCatalog.length}`;
-  }
-}
-
-// Окно с описанием медали
-function showMedalDetails(id) {
-  const medal = getMedalInfo(id);
-
-  if (!medal) return;
-
-  const unlocked = hasMedal(id);
-
-  let modal = document.getElementById('medalDetailsModal');
-
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'medalDetailsModal';
-
-    modal.innerHTML = `
-      <div class="medal-details-box">
-        <button
-          type="button"
-          class="medal-details-close"
-          id="closeMedalDetails"
-        >✕</button>
-
-        <div id="medalDetailsContent"></div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    modal.addEventListener('click', event => {
-      if (
-        event.target === modal ||
-        event.target.id === 'closeMedalDetails'
-      ) {
-        modal.classList.remove('open');
-      }
-    });
-  }
-
-  const content = document.getElementById(
-    'medalDetailsContent'
-  );
-
-  content.innerHTML = `
-    <div class="medal-details-icon">
-      ${unlocked ? medal.icon : '🔒'}
-    </div>
-
-    <h2>${medal.name}</h2>
-
-    <p>${medal.description}</p>
-
-    <div class="medal-details-status">
-      ${unlocked
-        ? '⭐ Эта медаль уже твоя!'
-        : 'Продолжай играть — и эта медаль станет твоей!'}
-    </div>
-
-    <small>${medal.category}</small>
-  `;
-
-  modal.classList.add('open');
-}
-
-// Стили медалей
-(function addMedalStyles() {
-  if (document.getElementById('medalStyles')) return;
-
-  const style = document.createElement('style');
-  style.id = 'medalStyles';
-
-  style.textContent = `
-    .medal-group {
-      margin: 18px 0 25px;
-    }
-
-    .medal-group-title {
-      font-size: 16px;
-      margin: 0 0 12px;
-      color: #55516f;
-    }
-
-    .medal-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .medal-card {
-      border: 1px solid #e9e5f4;
-      border-radius: 16px;
-      background: #fff;
-      padding: 16px 10px;
-      min-height: 135px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      cursor: pointer;
-      color: #353044;
-      font: inherit;
-      text-align: center;
-    }
-
-    .medal-card.unlocked {
-      background: #f4f0ff;
-      border-color: #d9cff5;
-    }
-
-    .medal-card.locked {
-      opacity: .65;
-    }
-
-    .medal-icon {
-      font-size: 32px;
-    }
-
-    .medal-name {
-      font-weight: 750;
-      font-size: 13px;
-    }
-
-    .medal-status {
-      font-size: 11px;
-      color: #89839b;
-    }
-
-    .medal-card.unlocked .medal-status {
-      color: #8064c5;
-    }
-
-    #medalDetailsModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: #17132288;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    #medalDetailsModal.open {
-      display: flex;
-    }
-
-    .medal-details-box {
-      width: 100%;
-      max-width: 340px;
-      background: #fff;
-      border-radius: 22px;
-      padding: 25px 20px;
-      text-align: center;
-      position: relative;
-      color: #353044;
-    }
-
-    .medal-details-close {
-      position: absolute;
-      right: 13px;
-      top: 13px;
-      border: 0;
-      border-radius: 9px;
-      background: #f1eef8;
-      padding: 7px 10px;
-      cursor: pointer;
-    }
-
-    .medal-details-icon {
-      font-size: 55px;
-      margin: 12px 0;
-    }
-
-    .medal-details-box h2 {
-      font-size: 20px;
-      margin: 8px 0;
-    }
-
-    .medal-details-box p {
-      color: #777187;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .medal-details-status {
-      background: #f3efff;
-      color: #7356b7;
-      padding: 12px;
-      border-radius: 12px;
-      margi
-
-
-АСТЬ 7. МЕДАЛИ, ДОСТИЖЕНИЯ И НАГРАДЫ
-// ==========================================
-
-const medalCatalog = [
-  {
-    id: 'erudite_25',
-    icon: '🧠',
-    name: 'Начинающий эрудит',
-    description: 'Реши 25 вопросов в игре «Эрудит».',
-    category: 'Эрудит'
-  },
-  {
-    id: 'erudite_100',
-    icon: '📚',
-    name: 'Знаток',
-    description: 'Реши 100 вопросов в игре «Эрудит».',
-    category: 'Эрудит'
-  },
-  {
-    id: 'erudite_250',
-    icon: '🎓',
-    name: 'Мастер знаний',
-    description: 'Реши 250 вопросов в игре «Эрудит».',
-    category: 'Эрудит'
-  },
-  {
-    id: 'erudite_500',
-    icon: '🏆',
-    name: 'Профессор',
-    description: 'Реши 500 вопросов в игре «Эрудит».',
-    category: 'Эрудит'
-  },
-  {
-    id: 'erudite_1000',
-    icon: '👑',
-    name: 'Легенда знаний',
-    description: 'Реши 1000 вопросов в игре «Эрудит».',
-    category: 'Эрудит'
-  },
-
-  {
-    id: 'child_25',
-    icon: '🌱',
-    name: 'Первые шаги',
-    description: 'Ответь на 25 вопросов в детской игре.',
-    category: 'Детская игра'
-  },
-  {
-    id: 'child_100',
-    icon: '⭐',
-    name: 'Любознательный',
-    description: 'Ответь на 100 вопросов в детской игре.',
-    category: 'Детская игра'
-  },
-  {
-    id: 'child_250',
-    icon: '🌟',
-    name: 'Исследователь',
-    description: 'Ответь на 250 вопросов в детской игре.',
-    category: 'Детская игра'
-  },
-  {
-    id: 'child_500',
-    icon: '🏅',
-    name: 'Знаток мира',
-    description: 'Ответь на 500 вопросов в детской игре.',
-    category: 'Детская игра'
-  },
-  {
-    id: 'child_1000',
-    icon: '🦉',
-    name: 'Мудрый совёнок',
-    description: 'Ответь на 1000 вопросов в детской игре.',
-    category: 'Детская игра'
-  },
-
-  {
-    id: 'streak_10',
-    icon: '🔥',
-    name: 'Разогрев',
-    description: 'Дай 10 правильных ответов подряд.',
-    category: 'Серии ответов'
-  },
-  {
-    id: 'streak_25',
-    icon: '💫',
-    name: 'На волне успеха',
-    description: 'Дай 25 правильных ответов подряд.',
-    category: 'Серии ответов'
-  },
-  {
-    id: 'streak_50',
-    icon: '⚡',
-    name: 'Молниеносный ум',
-    description: 'Дай 50 правильных ответов подряд.',
-    category: 'Серии ответов'
-  },
-  {
-    id: 'streak_100',
-    icon: '💎',
-    name: 'Непобедимый',
-    description: 'Дай 100 правильных ответов подряд.',
-    category: 'Серии ответов'
-  },
-
-  {
-    id: 'level_Разминка',
-    icon: '🥉',
-    name: 'Разминка пройдена',
-    description: 'Заверши уровень «Разминка».',
-    category: 'Уровни'
-  },
-  {
-    id: 'level_Профи',
-    icon: '🥈',
-    name: 'Профи пройден',
-    description: 'Заверши уровень «Профи».',
-    category: 'Уровни'
-  },
-  {
-    id: 'level_Гений',
-    icon: '🥇',
-    name: 'Гений пройден',
-    description: 'Заверши уровень «Гений».',
-    category: 'Уровни'
-  }
+function saveName(){let n=$('nameInput').value.trim();if(n){data.name=n;save();refresh()}}
+const ages=['4–5 лет','6–7 лет','8–9 лет','10–12 лет'];
+const topics=[
+ ['🔢','Математика'],['🔤','Буквы и слова'],['🐾','Животные'],['🌍','Окружающий мир'],
+ ['🎨','Цвета и формы'],['🚀','Космос'],['📚','Сказки'],['🧩','Логика']
 ];
-
-// Проверка, получена ли медаль
-function hasMedal(id) {
-  return Array.isArray(progress.medals) &&
-    progress.medals.includes(id);
-}
-
-// Получение информации о медали
-function getMedalInfo(id) {
-  return medalCatalog.find(medal => medal.id === id);
-}
-
-// Рисуем медали
-function renderMedals() {
-  const container =
-    document.getElementById('medalsGrid') ||
-    document.getElementById('medalsList');
-
-  if (!container) return;
-
-  const earned = medalCatalog.filter(medal =>
-    hasMedal(medal.id)
-  );
-
-  const groups = [...new Set(
-    medalCatalog.map(medal => medal.category)
-  )];
-
-  container.innerHTML = groups.map(group => {
-    const medals = medalCatalog.filter(
-      medal => medal.category === group
-    );
-
-    return `
-      <div class="medal-group">
-        <h3 class="medal-group-title">${group}</h3>
-
-        <div class="medal-grid">
-          ${medals.map(medal => {
-            const unlocked = hasMedal(medal.id);
-
-            return `
-              <button
-                class="medal-card ${unlocked ? 'unlocked' : 'locked'}"
-                type="button"
-                data-medal="${medal.id}"
-                aria-label="${medal.name}"
-              >
-                <span class="medal-icon">
-                  ${unlocked ? medal.icon : '🔒'}
-                </span>
-
-                <span class="medal-name">
-                  ${medal.name
+let chosenAge='',chosenTopic='',mode='child',level='Разминка',pool=[],index=0,correctRound=0,answered=false,hinted=false,lastQuestions=[];
+$('ageGrid').innerHTML=ages.map(a=>`<button class="tile" onclick="chooseAge('${a}')"><span class="emoji">🎈</span><b>${a}</b></button>`).join('');
+$('topicGrid').innerHTML=topics.map(t=>`<button class="tile" onclick="chooseTopic('${t[1]}')"><span class="emoji">${t[0]}</span><b>${t[1]}</b></button>`).join('');
+function chooseAge(a){chosenAge=a;$('ageLabel').textContent='Возраст: '+a;show('topics')}
+function chooseTopic(t){chosenTopic=t;startChild()}
+const childBank={
+ 'Математика':[
+ ['Сколько будет 2 + 3?'
 
 
-n: 16px 0 10px;
-      font-size: 13px;
-      font-weight: 700;
-    }
+/head>
+<body>
+<div id="app">
+<header>
+ <div class="logo">УМНЯ<span>Ш</span>А 🦉</div>
+ <div class="stars">⭐ <span id="starCount">0</span></div>
+</header>
 
-    .medal-details-box small {
-      color: #9992a9;
-    }
-  `;
+<section class="screen active" id="home">
+ <div class="hero">
+  <div><h1>Привет, умняшка!</h1>
+   <p>Давай узнавать новое, играть и собирать медали!</p>
+   <button class="btn" onclick="show('games')">Начать игру</button>
+  </div>
+  <div class="owl">🦉</div>
+ </div>
+ <h2>Выбери занятие</h2>
+ <div class="grid">
+  <button class="tile" onclick="show('ages')"><span class="emoji">🎨</span><b>Детская игра</b></button>
+  <button class="tile" onclick="show('levels')"><span class="emoji">🧠</span><b>Эрудит</b></button>
+  <button class="tile" onclick="show('profile')"><span class="emoji">👤</span><b>Мой профиль</b></button>
+  <button class="tile" onclick="show('medals')"><span class="emoji">🏅</span><b>Мои медали</b></button>
+ </div>
+ <div class="card">
+  <b>🌟 Твой прогресс</b>
+  <div class="progress"><div id="homeProgress"></div></div>
+  <div class="small" id="homeStats">Решено вопросов: 0</div>
+ </div>
+</section>
 
-  document.head.appendChild(style);
-})();
+<section class="screen" id="games">
+ <h1>Игровой мир</h1><p>Выбирай, чему хочешь научиться.</p>
+ <div class="grid">
+  <button class="tile" onclick="show('ages')"><span class="emoji">🎨</span><b>Детская игра</b></button>
+  <button class="tile" onclick="show('levels')"><span class="emoji">🧠</span><b>Эрудит</b></button>
+ </div>
+</section>
 
-// Нажатие на карточку медали
-document.addEventListener('click', event => {
-  const card = event.target.closest('[data-medal]');
+<section class="screen" id="ages">
+ <h1>Сколько тебе лет?</h1><p>Выбери возрастную группу.</p>
+ <div class="grid" id="ageGrid"></div>
+</section>
 
-  if (!card) return;
+<section class="screen" id="topics">
+ <h1>Выбери тему</h1><p id="ageLabel"></p>
+ <div class="grid" id="topicGrid"></div>
+</section>
 
-  showMedalDetails(card.dataset.medal);
-});
+<section class="screen" id="levels">
+ <h1>Эрудит</h1><p>40 вопросов для тренировки ума.</p>
+ <div class="card"><b>Как играть?</b><p>Отвечай на вопросы, получай звёзды и открывай достижения. В каждом уровне есть вопросы с вариантами и вводом ответа.</p></div>
+ <div class="grid">
+  <button class="tile" onclick="startErudite('Разминка')"><span class="emoji">🌱</span><b>Разминка</b><p class="small">2 ⭐ за ответ</p></button>
+  <button class="tile" onclick="startErudite('Профи')"><span class="emoji">🚀</span><b>Профи</b><p class="small">3 ⭐ за ответ</p></button>
+  <button class="tile" onclick="startErudite('Гений')"><span class="emoji">💎</span><b>Гений</b><p class="small">5 ⭐ за ответ</p></button>
+  <button class="tile" onclick="startErudite('Смешанный')"><span class="emoji">🎲</span><b>Смешанный</b><p class="small">Все уровни</p></button>
+ </div>
+</section>
 
-// Обновление медалей после получения награды
-const originalAddMedal = addMedal;
+<section class="screen" id="quiz">
+ <div class="small" id="quizLabel">Вопрос</div>
+ <div class="progress"><div id="quizProgress"></div></div>
+ <div class="question" id="questionText"></div>
+ <div id="answerArea"></div>
+ <div id="feedback" class="feedback hidden"></div>
+ <button class="btn yellow hidden" id="hintButton" onclick="hint()">💡 Подсказка — 3 ⭐</button>
+ <button class="btn hidden" id="nextButton" onclick="nextQuestion()">Следующий вопрос →</button>
+ <button class="btn gray" onclick="leaveQuiz()">Выйти</button>
+</section>
 
-addMedal = function(id) {
-  originalAddMedal(id);
-  renderMedals();
+<section class="screen" id="result">
+ <div class="hero"><div><h1>Отличная работа!</h1><p id="resultText"></p></div><div class="owl">🦉</div></div>
+ <div class="grid">
+  <div class="metric"><strong id="resultCorrect">0</strong><span>Правильных ответов</span></div>
+  <div class="metric"><strong id="resultStars">0</strong><span>Получено звёзд</span></div>
+ </div>
+ <button class="btn" onclick="show('home')">На главную</button>
+ <button class="btn light" onclick="repeatGame()">Сыграть ещё раз</button>
+</section>
+
+<section class="screen" id="profile">
+ <h1>Мой профиль 👤</h1>
+ <div class="card"><h2 id="playerName">Умняшка</h2><p>Маленькие шаги — большие знания!</p>
+ <input type="text" id="nameInput" maxlength="24" placeholder="Твоё имя">
+ <button class="btn light" onclick="saveName()">Сохранить имя</button></div>
+ <div class="grid">
+  <div class="metric"><strong id="statSolved">0</strong><span>Решено вопросов</span></div>
+  <div class="metric"><strong id="statCorrect">0</strong><span>Правильных</span></d
+
+
+,['4','5','6'],'5','2 + 3 = 5.'],
+ ['Сколько будет 10 − 4?',['5','6','7'],'6','Если от 10 убрать 4, останется 6.'],
+ ['Какое число больше: 8 или 5?',['5','8','Одинаковые'],'8','8 больше 5.'],
+ ['Сколько сторон у треугольника?',['2','3','4'],'3','У треугольника три стороны.'],
+ ['Сколько будет 3 × 2?',['5','6','8'],'6','Три раза по два — шесть.']],
+ 'Буквы и слова':[
+ ['С какой буквы начинается слово «Мама»?',['М','А','О'],'М','Слово «Мама» начинается с буквы М.'],
+ ['Сколько букв в слове «кот»?',['2','3','4'],'3','В слове кот три буквы.'],
+ ['Какое слово обозначает предмет?',['Бежать','Стол','Красивый'],'Стол','Стол — название предмета.'],
+ ['Какая буква гласная?',['Б','К','А'],'А','А — гласная буква.'],
+ ['Что рифмуется со словом «дом»?',['Сом','Лес','Кот'],'Сом','Дом и сом имеют похожее окончание.']],
+ 'Животные':[
+ ['Какое животное говорит «мяу»?',['Собака','Кошка','Корова'],'Кошка','Кошки обычно мяукают.'],
+ ['Кто носит домик на спине?',['Черепаха','Лиса','Заяц'],'Черепаха','Панцирь защищает черепаху.'],
+ ['Как называется детёныш собаки?',['Котёнок','Щенок','Телёнок'],'Щенок','Детёныш собаки — щенок.'],
+ ['Кто самый высокий среди этих животных?',['Жираф','Ёж','Кролик'],'Жираф','Жираф — самое высокое современное наземное животное.'],
+ ['Где живёт рыба?',['В воде','В песке','На дереве'],'В воде','Рыбы живут в воде.']],
+ 'Окружающий мир':[
+ ['Что нужно растениям для роста?',['Свет и вода','Только камни','Пластик'],'Свет и вода','Растениям нужны вода, свет и другие условия.'],
+ ['Какое время года идёт после зимы?',['Осень','Весна','Лето'],'Весна','После зимы приходит весна.'],
+ ['Что светит днём?',['Луна','Солнце','Фонарь'],'Солнце','Солнце — наша звезда.'],
+ ['Из чего состоит лёд?',['Из воды','Из песка','Из воздуха'],'Из воды','Лёд — замёрзшая вода.'],
+ ['Как называется дом пчёл?',['Муравейник','Улей','Нора'],'Улей','Пчёлы живут в ульях.']],
+ 'Цвета и формы':[
+ ['Какой цвет получится из синего и жёлтого?',['Зелёный','Красный','Белый'],'Зелёный','Синий и жёлтый дают зелёный.'],
+ ['Сколько углов у квадрата?',['3','4','5'],'4','У квадрата четыре угла.'],
+ ['Какого цвета обычно трава?',['Зелёная','Фиолетовая','Синяя'],'Зелёная','Трава обычно зелёная.'],
+ ['Какая фигура круглая?',['Круг','Квадрат','Треугольник'],'Круг','У круга нет углов.'],
+ ['Сколько сторон у прямоугольника?',['3','4','6'],'4','У прямоугольника четыре стороны.']],
+ 'Космос':[
+ ['Как называется наша планета?',['Марс','Земля','Венера'],'Земля','Мы живём на планете Земля.'],
+ ['Что находится в центре Солнечной системы?',['Солнце','Луна','Земля'],'Солнце','Планеты обращаются вокруг Солнца.'],
+ ['Что видно ночью на небе?',['Звёзды','Радуга','Облака из конфет'],'Звёзды','В ясную ночь видны звёзды.'],
+ ['Кто первым полетел в космос среди людей?',['Юрий Гагарин','Нил Армстронг','Альберт Эйнштейн'],'Юрий Гагарин','Первым человеком в космосе стал Юрий Гагарин.'],
+ ['Как называется спутник Земли?',['Луна','Солнце','Марс'],'Луна','Луна — естественный спутник Земли.']],
+ 'Сказки':[
+ ['Кто потерял хрустальную туфельку?',['Золушка','Красная Шапочка','Русалочка'],'Золушка','В сказке Золушка потеряла туфельку.'],
+ ['Кто живёт в избушке на курьих ножках?',['Баба-яга','Колобок','Карлсон'],'Баба-яга','Избушка на курьих ножках — дом Бабы-яги.'],
+ ['Кто убежал от дедушки и бабушки?',['Колобок','Теремок','Репка'],'Колобок','Колобок укатился от дедушки и бабушки.'],
+ ['Кто помогал тянуть репку?',['Мышка','Рыбка','Птичка'],'Мышка','Мышка помогла вытянуть репку.'],
+ ['Кто жил в теремке?',['Разные звери','Только медведь','Только волк'],'Разные звери','В теремке поселились разные животные.']],
+ 'Логика':[
+ ['Что лишнее: яблоко, груша, машина?',['Яблоко','Груша','Машина'],'Машина','Машина не фрукт.'],
+ ['Продолжи ряд: 2, 4, 6, ...',['7','8','10'],'8','Каждый раз прибавляем 2.'],
+ ['У кого четыре лапы?',['Кошка','Птица','Рыба'],'Кошка','У кошки четыре лапы.'],
+ ['Что тяжелее: килограмм ваты или килограмм железа?',['Вата','Железо','Одинаково'],'Одинаково','В обоих случаях масса — один килограмм.'],
+ ['Если сегодня понедельник, какой день завтра?',['Вторник','Среда','Воскресенье'],'Вторн
+
+
+ик','После понедельника идёт вторник.']]
 };
+function startChild(){
+ mode='child';level='Детская игра';pool=childBank[chosenTopic].map(q=>({q:q[0],opts:q[1],a:q[2],why:q[3],type:'choice'}));
+ beginQuiz();
+}
+const erudite=[
+['Сколько будет 12 × 8?',['86','96','108','92'],'96','12 × 8 = 96.','Разминка'],
+['Как называется столица Франции?',['Рим','Париж','Мадрид','Берлин'],'Париж','Столица Франции — Париж.','Разминка'],
+['Сколько минут в одном часе?',['50','60','100','30'],'60','В одном часе 60 минут.','Разминка'],
+['Какая планета известна как Красная планета?',['Венера','Марс','Юпитер','Меркурий'],'Марс','Марс выглядит красноватым из-за оксидов железа.','Разминка'],
+['Сколько будет 144 ÷ 12?',['10','11','12','14'],'12','144 разделить на 12 равно 12.','Разминка'],
+['Какой океан самый большой?',['Атлантический','Индийский','Тихий','Северный Ледовитый'],'Тихий','Тихий океан — крупнейший океан Земли.','Разминка'],
+['Как называется многоугольник с пятью сторонами?',['Шестиугольник','Пятиугольник','Треугольник','Четырёхугольник'],'Пятиугольник','Пятиугольник имеет пять сторон.','Разминка'],
+['Какой газ необходим человеку для дыхания?',['Кислород','Гелий','Водород','Неон'],'Кислород','Клеткам организма нужен кислород.','Разминка'],
+['Сколько будет 15 + 27?',['40','42','43','41'],'42','15 + 27 = 42.','Разминка'],
+['Как называется наука о растениях?',['Зоология','Ботаника','Геология','Астрономия'],'Ботаника','Ботаника изучает растения.','Разминка'],
+['Сколько градусов в прямом угле?',['45','90','180','360'],'90','Прямой угол равен 90 градусам.','Разминка'],
+['Какой материк самый большой?',['Африка','Евразия','Австралия','Антарктида'],'Евразия','Евразия — крупнейший материк.','Разминка'],
+['Сколько будет 7 в квадрате?',['14','49','42','56'],'49','7 × 7 = 49.','Разминка'],
+['Как называется процесс превращения воды в пар?',['Замерзание','Испарение','Плавление','Конденсация'],'Испарение','При испарении жидкость превращается в пар.','Разминка'],
+['Какой орган перекачивает кровь?',['Лёгкие','Сердце','Печень','Желудок'],'Сердце','Сердце перекачивает кровь по организму.','Разминка'],
+['Сколько будет 125 + 75?',['190','200','210','175'],'200','125 + 75 = 200.','Разминка'],
+['Как называется прибор для измерения температуры?',['Барометр','Термометр','Компас','Линейка'],'Термометр','Температуру измеряют термометром.','Разминка'],
+['Какой металл обозначается символом Fe?',['Золото','Железо','Серебро','Медь'],'Железо','Fe — химический символ железа.','Разминка'],
+['Сколько сторон у шестиугольника?',['5','6','7','8'],'6','У шестиугольника шесть сторон.','Разминка'],
+['Как называется самая близкая к Солнцу планета?',['Земля','Меркурий','Марс','Сатурн'],'Меркурий','Меркурий — ближайшая к Солнцу планета.','Разминка'],
+['Реши: 18 × 7',['116','126','136','146'],'126','18 × 7 = 126.','Профи'],
+['Сколько будет 15% от 200?',['20','25','30','35'],'30','10% — 20, ещё 5% — 10. Вместе 30.','Профи'],
+['Как называется самая длинная река Африки?',['Нил','Конго','Замбези','Нигер'],'Нил','Нил традиционно считается самой длинной рекой Африки.','Профи'],
+['Какой элемент имеет символ O?',['Золото','Кислород','Осмий','Олово'],'Кислород','O — символ кислорода.','Профи'],
+['Сколько будет 3 в пятой степени?',['125','243','81','625'],'243','3 × 3 × 3 × 3 × 3 = 243.','Профи'],
+['Как называется раздел биологии о животных?',['Ботаника','Зоология','Экология','Генетика'],'Зоология','Зоология изучает животных.','Профи'],
+['Сколько хромосом обычно в клетке человека?',['23','46','44','48'],'46','В большинстве клеток человека 46 хромосом.','Профи'],
+['Какой газ преобладает в атмосфере Земли?',['Кислород','Азот','Углекислый газ','Водород'],'Азот','Атмосфера примерно на 78% состоит из азота.','Профи'],
+['Сколько будет 2/3 от  ninety?',['30','45','60','75'],'60','Две трети от 90 — это 60.','Профи'],
+['Как называется точка пересечения осей координат?',['Вершина','Начало координат','Фокус','Центр окружности'],'Начало координат','Оси пересекаются в начале координат.','Профи'],
+['Какой учёный сформулировал закон всемирного тяготения?',['Ньютон','Дарвин','Фарадей','Пастер'],'Ньютон','Зако
 
-// Обновление при открытии профиля
-const originalRenderProfile = renderProfile;
 
-renderProfile = function() {
-  originalRenderProfile();
-  renderMedals();
+н всемирного тяготения связан с Исааком Ньютоном.','Гений'],
+['Как называется число, делящееся только на 1 и себя?',['Чётное','Простое','Составное','Отрицательное'],'Простое','Простое число имеет ровно два положительных делителя.','Гений'],
+['Какой химический символ у натрия?',['N','Na','Ne','Ni'],'Na','Na — символ натрия.','Гений'],
+['Сколько градусов составляет сумма углов треугольника?',['90','180','270','360'],'180','Сумма внутренних углов треугольника равна 180°.','Гений'],
+['Как называется переход твёрдого вещества сразу в газ?',['Конденсация','Сублимация','Кристаллизация','Плавление'],'Сублимация','Сублимация — переход из твёрдого состояния в газообразное.','Гений'],
+['Кто написал роман «Война и мир»?',['Пушкин','Толстой','Достоевский','Чехов'],'Толстой','Автор романа — Лев Толстой.','Гений'],
+['Как называется наука о землетрясениях?',['Сейсмология','Метеорология','Орнитология','Гидрология'],'Сейсмология','Сейсмология изучает землетрясения и сейсмические волны.','Гений'],
+['Какое число является квадратом числа 13?',['156','169','179','196'],'169','13 × 13 = 169.','Гений'],
+['Как называется самая маленькая единица информации?',['Байт','Бит','Килобайт','Пиксель'],'Бит','Бит — минимальная единица информации.','Гений'],
+['Какой слой атмосферы содержит большую часть озона?',['Тропосфера','Стратосфера','Мезосфера','Экзосфера'],'Стратосфера','Основная часть атмосферного озона находится в стратосфере.','Гений']
+];
+const typedAnswers={
+ 28:'60',29:'начало координат',30:'ньютон',31:'простое',
+ 32:'na',33:'180',34:'сублимация',35:'толстой',
+ 36:'сейсмология',37:'169',38:'бит',39:'стратосфера'
 };
-
-// Первичная отрисовка
-renderMedals();
-
-// ==========================================
-// КОНЕЦ ЧАСТИ 7
-// ==========================================
-
-// ==========================================
-// ЧАСТЬ 8. ПОДКЛЮЧЕНИЕ КНОПОК И СОБЫТИЙ
-// ==========================================
-
-// Удобный поиск элементов
-function getElement(id) {
-  return document.getElementById(id);
+erudite.forEach((q,i)=>{q.push(i>=28?'input':'choice')});
+function startErudite(l){
+ mode='erudite';level=l;
+ let selected=erudite.map((q,i)=>({q:q[0],opts:q[1],a:q[2],why:q[3],level:q[4],type:q[5],id:i}));
+ if(l!=='Смешанный')selected=selected.filter(q=>q.level===l);
+ if(l==='Смешанный')selected=selected.sort(()=>Math.random()-.5);
+ pool=selected.map(q=>({...q,typed:typedAnswers[q.id]}));
+ beginQuiz();
 }
-
-// Безопасное назначение обработчика
-function onClick(id, callback) {
-  const element = getElement(id);
-
-  if (element) {
-    element.addEventListener('click', callback);
-  }
+function beginQuiz(){
+ index=0;correctRound=0;answered=false;hinted=false;
+ lastQuestions=pool.slice();show('quiz');renderQuestion();
 }
-
-// Переход на экран
-function showScreen(screenId) {
-  document.querySelectorAll('.view').forEach(view => {
-    view.classList.remove('active');
-  });
-
-  const target = getElement(screenId);
-
-  if (target) {
-    target.classList.add('active');
-  }
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
+function renderQuestion(){
+ const q=pool[index];answered=false;hinted=false;
+ $('quizLabel').textContent=`${level} · Вопрос ${index+1} из ${pool.length}`;
+ $('quizProgress').style.width=(index/pool.length*100)+'%';
+ $('questionText').textContent=q.q;
+ $('feedback').className='feedback hidden';
+ $('nextButton').classList.add('hidden');
+ $('hintButton').classList.remove('hidden');
+ $('hintButton').disabled=data.stars<3;
+ if(q.type==='input'){
+  $('answerArea').innerHTML='<input id="typedAnswer" type="text" placeholder="Напиши свой ответ"><button class="btn" id="submitTyped">Проверить ответ</button>';
+  $('submitTyped').onclick=()=>checkTyped();
+ }else{
+  $('answerArea').innerHTML='<div class="answers">'+q.opts.map((a,i)=>`<button class="answer" data-answer="${i}">${a}</button>`).join('')+'</div>';
+  $('answerArea').querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>checkAnswer(q.opts[+b.dataset.answer]));
+ }
 }
-
-// Главный экран
-onClick('homeButton', () => {
-  showScreen('home');
-});
-
-onClick('backHome', () => {
-  showScreen('home');
-});
-
-// Детская игра
-onClick('childGameButton', () => {
-  showScreen('childAge');
-});
-
-onClick('childBack', () => {
-  showScreen('childAge');
-});
-
-// Выбор возраста
-document.querySelectorAll('[data-age]').forEach(button => {
-  button.addEventListener('click', () => {
-    const age = button.dataset.age;
-
-    if (typeof chooseAge === 'function') {
-      chooseAge(age);
-    }
-  });
-});
-
-// Выбор темы
-document.querySelectorAll('[data-topic]').forEach(button => {
-  button.addEventListener('click', () => {
-    const topic = button.dataset.topic;
-
-    if (typeof chooseTopic === 'function') {
-      chooseTopic(topic);
-    }
-  });
-});
-
-// Следующий вопрос детской игры
-onClick('childNext', () => {
-  nextChildQuestion();
-});
-
-// Эрудит
-onClick('eruditeButton', () => {
-  showScreen('erudite');
-});
-
-onClick('startErudite', () => {
-  startE();
-});
-
-onClick('eNext', () => {
-  nextE();
-});
-
-onClick('eHint', () => {
-  hint();
-});
-
-onClick('eCheck', () => {
-  checkTyped();
-});
-
-// Профиль
-onClick('profileButton', () => {
-  showScreen('profile');
-  renderProfile();
-});
-
-onClick('profileBack', () => {
-  showScreen('home');
-});
-
-// Медали
-onClick('medalsButton', () => {
-  showScreen('medals');
-  renderMedals();
-});
-
-// Возвращение из раздела медалей
-onClick('medalsBack', () => {
-  showScreen('home');
-});
-
-// Повтор детской игры
-onClick('childAgain', () => {
-  showScreen('childAge');
-});
-
-// Повтор Эрудита
-onClick('eruditeAgain', () => {
-  showScreen('erudite');
-});
-
-// Кнопки перехода к разделам
-document.querySelectorAll('[data-screen]').forEach(button => {
-  button.addEventListener('click', () => {
-    showScreen(button.dataset.screen);
-  });
-});
-
-// Обработка ответов в детской игре
-document.addEventListener('click', event => {
-  const childOption = event.target.closest('[data-child-answer]');
-
-  if (childOption) {
-    const answer = childOption.dataset.childAnswer;
-    answerChild(answer);
-  }
-});
-
-// Обработка ответов Эрудита
-document.addEventListener('click', event => {
-  const option = event.target.closest('[data-e-answer]');
-
-  if (option) {
-    const answer = option.dataset.eAnswer;
-    answerE(answer);
-  }
-});
-
-// Переходы между разделами через меню
-document.addEventListener('click', event => {
-  const button = event.target.closest('[data-open-screen]');
-
-  if (!button) return;
-
-  showScreen(button.dataset.openScreen);
-});
-
-// Обновление профиля и статистики
-function refreshAllSections(
-
-
-) {
-  if (typeof renderProfile === 'function') {
-    renderProfile();
-  }
-
-  if (typeof renderMedals === 'function') {
-    renderMedals();
-  }
-
-  if (typeof updateProfile === 'function') {
-    updateProfile();
-  }
+function normalize(s){return String(s).toLowerCase().trim().replace(/[.,!?;:]/g,'').replace(/\s+/g,' ')}
+function checkTyped(){
+ const q=pool[index],v=$('typedAnswer').value;
+ if(!v.trim())return;
+ const ok=normalize(v)===normalize(q.typed||q.a);
+ finishAnswer(ok);
 }
+function checkAnswer(v){finishAnswer(normalize(v)===normalize(pool[index].a))}
+function finishAnswer(ok){
+ if(answered)return;answered=true;
+ const q=pool[index];
+ data.solved++;if(ok){data.correct++;data.streak++;data.best=Math.max(data.best,data.streak);correctRound++;
+  const reward=mode==='child'?2:level==='Разминка'?2:level==='Профи'?3:5;
+  data.stars+=reward;
+ }else data.streak=0;
+ if(mode==='child'){data.child.solved++;if(ok)data.child.correct++}
+ else{data.erudite.solved++;if(ok)data.erudite.correct++}
+ save();refresh();
+ $('answerArea').querySelectorAll('button').forEach(b=>{
+  b.disabled=true;
+  if(normalize(b.textContent)===normalize(q.a))b.classList.add('correct');
+ });
+ $('feedback').className='feedback '+(ok?'g
 
-// Обновление при возвращении на вкладку
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    refreshAllSections();
-  }
-});
 
-// Закрытие окна медали по Escape
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') {
-    const modal = getElement('medalDetailsModal');
-
-    if (modal) {
-      modal.classList.remove('open');
-    }
-  }
-});
-
-// Поддержка Enter в поле ответа Эрудита
-const typedAnswer = getElement('eTyped');
-
-if (typedAnswer) {
-  typedAnswer.addEventListener('keydown', event => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      checkTyped();
-    }
-  });
+ood':'bad');
+ $('feedback').innerHTML=(ok?'⭐ Верно! Молодец!':'Пока неверно. Правильный ответ: <b>'+q.a+'</b>.')+'
+'+q.why;
+ $('hintButton').
+sList.add('hidden');
+ $('nextButton').classList.remove('hidden');
+ $('nextButton').textContent=index===pool.length-1?'Завершить':'Следующий вопрос →';
+ checkAchievements();
 }
-
-// Финальное обновление интерфейса
-refreshAllSections();
-
-// ==========================================
-// КОНЕЦ ЧАСТИ 8
-// ========================================== // ==========================================
-// ЧАСТЬ 9. ФИНАЛЬНАЯ СБОРКА И ЗАПУСК
-// ==========================================
-
-// Проверяем наличие хранилища
-function checkStorageSupport() {
-  try {
-    const testKey = '__umnyasha_test__';
-
-    localStorage.setItem(testKey, 'ok');
-    localStorage.removeItem(testKey);
-
-    return true;
-  } catch (error) {
-    console.warn('Локальное сохранение недоступно.');
-    return false;
-  }
+function hint(){
+ if(answered||hinted)return;
+ if(data.stars<3){$('feedback').className='feedback';$('feedback').textContent='Не хватает звёзд для подсказки.';return}
+ data.stars-=3;hinted=true;save();refresh();
+ const q=pool[index];
+ $('feedback').className='feedback';
+ $('feedback').textContent='💡 Подумай ещё раз: '+q.why;
+ $('hintButton').disabled=true;
 }
-
-const storageAvailable = checkStorageSupport();
-
-// Безопасное сохранение прогресса
-function finalSaveProgress() {
-  if (!storageAvailable) return;
-
-  try {
-    saveProgress();
-  } catch (error) {
-    console.error('Не удалось сохранить прогресс:', error);
-  }
+function nextQuestion(){
+ if(!answered)return;
+ index++;
+ if(index>=pool.length){finishGame();return}
+ renderQuestion();
 }
-
-// Восстановление интерфейса после загрузки
-function initializeApp() {
-  try {
-    // Проверяем основные данные
-    if (!progress || typeof progress !== 'object') {
-      console.warn('Прогресс не загружен.');
-      return;
-    }
-
-    // Проверяем массив медалей
-    if (!Array.isArray(progress.medals)) {
-      progress.medals = [];
-    }
-
-    // Обновляем статистику
-    if (typeof initializeProfile === 'function') {
-      initializeProfile();
-    }
-
-    if (typeof updateProfile === 'function') {
-      updateProfile();
-    }
-
-    if (typeof updatePlayerRank === 'function') {
-      updatePlayerRank();
-    }
-
-    if (typeof updateMedalCounter === 'function') {
-      updateMedalCounter();
-    }
-
-    // Отрисовываем медали
-    if (typeof renderMedals === 'function') {
-      renderMedals();
-    }
-
-    // Показываем главный экран
-    const activeView = document.querySelector('.view.active');
-
-    if (!activeView) {
-      const home = document.querySelector('#home');
-
-      if (home) {
-        home.classList.add('active');
-      }
-    }
-
-    // Сохраняем обновлённые данные
-    finalSaveProgress();
-
-  } catch (error) {
-    console.error('Ошибка запуска УМНЯШИ:', error);
-  }
+function finishGame(){
+ $('resultCorrect').textContent=correctRound+' / '+pool.length;
+ $('resultStars').textContent=mode==='child'?correctRound*2:correctRound*(level==='Разминка'?2:level==='Профи'?3:5);
+ $('resultText').textContent=`Ты завершил игру «${level}». Продолжай тренироваться!`;
+ if(mode==='child')data.lastMode='child';else data.lastMode='erudite';
+ data.lastLevel=level;save();show('result');
 }
-
-// Сохраняем прогресс при уходе со страницы
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
-    finalSaveProgress();
-  }
-});
-
-// Дополнительное сохранение перед закрытием
-window.addEventListener('pagehide', () => {
-  finalSaveProgress();
-});
-
-// Запуск после загрузки HTML
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-  initializeApp();
+function repeatGame(){
+ if(data.lastMode==='child')startChild();
+ else startErudite(data.lastLevel||'Разминка');
 }
-
-// ==========================================
-// ПРИЛОЖЕНИЕ УМНЯША ГОТОВО
-// ==========================================
-
+function leaveQuiz(){if(confirm('Выйти из игры? Текущая серия вопросов завершится.'))show('home')}
+const catalog=[
+ ['erudite_25','📘','Эрудит 25','Решено 25 вопросов Эрудита'],
+ ['erudite_100','📚','Эрудит 100','Решено 100 вопросов Эрудита'],
+ ['erudite_250','🎓','Эрудит 250','Решено 250 вопросов Эрудита'],
+ ['erudite_500','🏆','Эрудит 500','Решено 500 вопросов Эрудита'],
+ ['erudite_1000','💎','Эрудит 1000','Решено 1000 вопросов Эрудита'],
+ ['child_25','🧸','Первые знания','Решено 25 детских вопросов'],
+ ['child_100','🌈','Любознательный','Решено 100 детских вопросов'],
+ ['child_250','🦋','Исследователь','Решено 250 детских вопросов'],
+ ['child_500','🌟','Знаток','Решено 500 детских вопросов'],
+ ['child_1000','👑','Мастер знаний','Решено 1000 детских вопросов'],
+ ['streak_10','🔥','Серия 10','10 правильных ответов подряд'],
+ ['streak_25','⚡','Серия 25','25 правильных ответов подряд'],
+ ['streak_50','🌠','Серия 50','50 правильных ответов подряд'],
+ ['streak_100','🚀','Серия 100','100 правильных ответов подряд'],
+ ['level_Разминка','🌱','Разминка пройдена','Завершён уровень Разминка'],
+ ['level_Профи','🚀','Профи пройден','Завершён уровень Профи'],
+ ['level_Гений','💎','Гений пройден','Завершён уровень Гений']
+];
+function award(id){
+ if(data.medals.includes(id))return;
+ data.medals.push(id);save();
+ const m=catalog.find(x=>x[0]===id);
+ if(m){$('medalTitle').textContent=m[1]+' '+m[2];$('medalDescription').textContent='Новая медаль! '+m[3];$('medalModal').classList.add('open')}
+}
+function checkAchievements(){
+ const e=data.erudite.solved,c=data.child.solved,s=data.streak;
+ [25,100,250,500,1000].forEach(n=>{if(e>=n)award('erudite_'+n);if(c>=n)award('child_'+n)});
+ [10,25,50,100].forEach(n=>{if(s>=n)award('streak_'+n)});
+ if(mode==='erudite'&&index===pool.length-1&&level!=='Смешанный')award('level_'+level);
+}
+function renderMedals(){
+ $('medalGrid').innerHTML=catalog.map(m=>{
+ const unlocked=data.medals.includes(m[0]);
+ return `<div class="medal ${unlocked?'':'locked'}" onclick="medalDetails('${m[0]}')"><div class="emoji">${m[1]}</div><b>${m[2]}</b><div class="small">${unlocked?'Получена':'Ещё не получена'}</div></div>`;
+ }).join('');
+}
+function medalDetails(id){
+ const m=catalog.find(x=>x[0]===id);if(!m)return;
+ $('medalTitle').textContent=m[1]+' '+m[2];
+ $('medalDescription').textContent=m[3]+(data.medals.includes(id)?' — медаль получена!':' — выполни условие, чтобы получить её.');
+ $('medalModal').classList.add('open');
+}
+function resetProgress(){
+ if(!confirm('Точно сбросить все звёзды, медали и статистику?'))return;
+ data=fresh();save();refresh();show('home');
+}
+refresh();
 </script>
 </body>
-</html>:1
+</html>/style>
+<
